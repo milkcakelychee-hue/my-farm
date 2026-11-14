@@ -6,17 +6,20 @@
   "scripts": {
     "dev": "vite",
     "build": "tsc -b && vite build",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "sync-db": "cp ../stardew-db/stardew.sqlite public/data/stardew.sqlite && cp node_modules/sql.js/dist/sql-wasm.wasm public/data/sql-wasm.wasm"
   },
   "dependencies": {
     "@fontsource/ibm-plex-sans-thai-looped": "^5.2.5",
     "@fontsource/plus-jakarta-sans": "^5.2.5",
     "idb-keyval": "^6.2.1",
-    "preact": "^10.26.5"
+    "preact": "^10.26.5",
+    "sql.js": "^1.13.0"
   },
   "devDependencies": {
     "@preact/preset-vite": "^2.10.1",
     "@types/node": "^22.15.21",
+    "@types/sql.js": "^1.4.9",
     "typescript": "~5.8.3",
     "vite": "^6.3.5",
     "vite-plugin-pwa": "^0.21.1"

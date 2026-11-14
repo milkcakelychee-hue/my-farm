@@ -4,6 +4,7 @@ import {
   Badge, Caption, Card, Compare, ConfirmDelete, DashedButton, DeleteButton, EmptyState, Explain,
   ItemRow, OfflineBanner, Page, PrimaryButton, SecondaryButton, SectionHead, Skeleton, Stepper, Tile, WarnBar,
 } from './ui'
+import { Stage1Data } from './stage1'
 
 /* ---------- แถบนำทางล่าง (จากบอร์ด 01 Today) ---------- */
 const TABS = [
@@ -165,15 +166,16 @@ function StorageTest() {
 }
 
 /* ---------- หน้ารวมของขั้น 0 ใต้แท็บเพิ่มเติม ---------- */
-type Sub = 'components' | 'states' | 'storage' | 'splash'
+type Sub = 'components' | 'states' | 'storage' | 'splash' | 'data'
 function Stage0Menu({ go }: { go: (s: Sub) => void }) {
   return (
-    <Page title="เพิ่มเติม" sub="ขั้น 0 · หน้าตรวจระบบดีไซน์ (ชั่วคราว)">
+    <Page title="เพิ่มเติม" sub="หน้าตรวจของขั้น 0–1 (ชั่วคราว)">
       <Card gap={8}>
         <SecondaryButton onClick={() => go('components')}>ตัวอย่างคอมโพเนนต์ (บอร์ด 33)</SecondaryButton>
         <SecondaryButton onClick={() => go('states')}>ตัวอย่างสถานะ (บอร์ด 34)</SecondaryButton>
         <SecondaryButton onClick={() => go('splash')}>Splash (บอร์ด 36)</SecondaryButton>
         <SecondaryButton onClick={() => go('storage')}>ทดสอบที่เก็บข้อมูล</SecondaryButton>
+        <SecondaryButton onClick={() => go('data')}>ข้อมูลขั้น 1 (10 พืช + สำรอง/กู้)</SecondaryButton>
       </Card>
     </Page>
   )
@@ -203,6 +205,7 @@ export function App() {
   if (route.sub === 'components') body = <ComponentsDemo />
   else if (route.sub === 'states') body = <StatesDemo />
   else if (route.sub === 'storage') body = <StorageTest />
+  else if (route.sub === 'data') body = <Stage1Data />
   else if (route.tab === 4) body = <Stage0Menu go={(s) => nav(4, s)} />
   else body = (
     <Page title={TABS[route.tab].label}>
