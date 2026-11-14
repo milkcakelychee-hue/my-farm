@@ -1,0 +1,68 @@
+/* ฟอนต์ self-host เพื่อใช้ออฟไลน์ (น้ำหนักตามที่ดีไซน์โหลด) */
+@import '@fontsource/plus-jakarta-sans/500.css';
+@import '@fontsource/plus-jakarta-sans/600.css';
+@import '@fontsource/plus-jakarta-sans/700.css';
+@import '@fontsource/plus-jakarta-sans/800.css';
+@import '@fontsource/ibm-plex-sans-thai-looped/400.css';
+@import '@fontsource/ibm-plex-sans-thai-looped/500.css';
+@import '@fontsource/ibm-plex-sans-thai-looped/600.css';
+@import '@fontsource/ibm-plex-sans-thai-looped/700.css';
+
+/* Design tokens — บอร์ด 32 / 32a (สเปกข้อ 2) · โหมดสว่างเท่านั้น */
+:root {
+  --brand: linear-gradient(100deg, #FFD25E 0%, #FDB927 50%, #F7A441 100%);
+  --brand-160: linear-gradient(160deg, #FFD25E 0%, #FDB927 55%, #F7A441 100%);
+  --amber: #FDB927;
+  --amber-deep: #A86E0C;
+  --amber-soft: #FFE6B4;
+  --page: #F4F1EB;
+  --page-bg: radial-gradient(120% 320px at 50% 0%, #FFE6B4 0%, rgba(244,241,235,0) 100%), #F4F1EB;
+  --card: #FFFFFF;
+  --sunken: #FAF6EE;
+  --hairline: #E8D9B5;
+  --ink: #26201A;
+  --soft: #6B6157;
+  --body2: #4F463D;
+  --win-line: #8FA83A;
+  --win-bg: #F5F9E4;
+  --win-ink: #5B6E1E;
+  --warn: #A63D2A;
+  --warn-bg: #F9DDD6;
+  --note-bg: #FFE9C7;
+  --note-ink: #8A4B0C;
+  --flower: #E985A6;
+  --once: #8FA83A;
+  --regrow: #C5D68F;
+  --empty: #ECE6DC;
+  --slot-line: #CDBEA6;
+  --slot-bg: #F6F0E4;
+  --explain-bg: #FFF8E8;
+  --explain-line: #F0DFB4;
+  --nav-pill: #FFE08A;
+
+  --r-icon: 10px;
+  --r-tile: 14px;
+  --r-card: 20px;
+  --r-big: 28px;
+
+  --sh-card: 0 2px 10px rgba(90,60,20,.08);
+  --sh-primary: 0 6px 16px rgba(247,164,65,.35);
+  --sh-nav: 0 -4px 20px rgba(90,60,20,.07);
+  --sh-dialog: 0 10px 30px rgba(90,60,20,.18);
+
+  --font: 'Plus Jakarta Sans', 'IBM Plex Sans Thai Looped', sans-serif;
+  color-scheme: light;
+}
+
+* { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+html, body { margin: 0; height: 100%; }
+body {
+  background: var(--page);
+  font-family: var(--font);
+  color: var(--ink);
+  -webkit-text-size-adjust: 100%;
+  overscroll-behavior: none;
+}
+button { font-family: inherit; cursor: pointer; }
+#app { height: 100%; }
+@keyframes shimmer{from{background-position:200% 0}to{background-position:-200% 0}}
