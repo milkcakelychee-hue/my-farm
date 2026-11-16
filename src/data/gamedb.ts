@@ -31,7 +31,7 @@ export type CropRow = {
   id: string; name_en: string; name_th: string | null; category: string | null
   sell_price: number | null; growth_days: number | null; regrow_days: number | null
   min_harvest: number; seasons: string | null; seed_id: string | null; seed_name: string | null
-  pierre: number | null; joja: number | null; verified: number; source_url: string | null
+  pierre: number | null; joja: number | null; verified: number; source_url: string | null; image_path: string | null
 }
 
 export const cropsQuery = `
@@ -41,8 +41,10 @@ SELECT i.id, i.name_en, i.name_th, i.category, i.sell_price, c.growth_days, c.re
   (SELECT price FROM shop_price WHERE item_id = c.seed_item_id AND shop = 'Pierre''s General Store') AS pierre,
   (SELECT price FROM shop_price WHERE item_id = c.seed_item_id AND shop = 'JojaMart') AS joja,
   (SELECT min(verified) FROM entity_source WHERE entity_type = 'crop' AND entity_id = c.item_id) AS verified,
-  (SELECT url FROM entity_source WHERE entity_type = 'crop' AND entity_id = c.item_id LIMIT 1) AS source_url
+  (SELECT url FROM entity_source WHERE entity_type = 'crop' AND entity_id = c.item_id LIMIT 1) AS source_url,
+  (SELECT file_path FROM image WHERE id = i.image_id AND status = 'downloaded') AS image_path
 FROM crop c JOIN item i ON i.id = c.item_id LEFT JOIN item s ON s.id = c.seed_item_id
+WHERE c.item_id IN ('pumpkin','parsnip','melon','cauliflower','ancient_fruit','cranberries','blueberry','strawberry','sunflower','fairy_rose')
 ORDER BY i.name_en`
 
 export async function meta(): Promise<Record<string, string>> {
