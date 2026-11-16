@@ -2,16 +2,19 @@
 // เนื้อหาตามสเปกข้อ 5: แอปจด "ความจุ" ไม่ใช่ log
 import { createStore, get, set, del, keys } from 'idb-keyval'
 
-export const SAVE_SCHEMA_VERSION = 1
+export const SAVE_SCHEMA_VERSION = 2
 export const MAX_SAVES = 3
 export type Season = 'Spring' | 'Summer' | 'Fall' | 'Winter'
-export type SprinklerKind = 'basic' | 'quality' | 'iridium' | 'iridium_pressure'
+export type SprinklerKind = 'basic' | 'quality' | 'iridium' | 'custom'
+export type GameDate = { season: Season; day: number; year: number }
+export type HouseLevel = 1 | 2 | 3                // 1 = Coop/Barn, 2 = Big, 3 = Deluxe
 
 export interface Plot {
   id: string
   name: string                                   // ผู้ใช้ตั้งเองตอนเพิ่มแปลง
   location: 'farm' | 'ginger_island'
-  sprinklers: { kind: SprinklerKind; count: number }[]
+  sprinkler: { kind: SprinklerKind; count: number; nozzle: boolean }
+  tiles: number                                  // ช่องปลูกได้จริง (เริ่มจากจำนวน × ช่องที่รดได้ แก้เองได้)
   split: { flower: number; once: number; regrow: number } // ส่วนที่เหลือ = ช่องว่าง
 }
 
@@ -29,12 +32,12 @@ export interface SaveData {
   schema_version: number
   id: string
   name: string
-  date: { season: Season; day: number; year: number }
+  date: GameDate
   plots: Plot[]
   machines: { keg: number; preserves_jar: number }
-  greenhouse: { crop_id: 'ancient_fruit'; planted?: { season: Season; day: number; year: number }; plants: number } | null
-  animal_housing: { coop: 0 | 1 | 2 | 3; barn: 0 | 1 | 2 | 3 }  // 0 = ยังไม่สร้าง, 1–3 = ขั้น
-  buildings: string[]                              // building.id ที่สร้างแล้ว
+  greenhouse: { crop_id: 'ancient_fruit'; planted: GameDate | null; plants: number }
+  animal_housing: { coop: HouseLevel[]; barn: HouseLevel[] }  // หนึ่งตัวเลขต่อหนึ่งหลัง = ขั้นของหลังนั้น
+  buildings: Record<string, number>                // building.id -> จำนวนที่สร้างแล้ว (ไม่รวม Coop/Barn)
   skills: { farming_level: number; professions: string[] }
   ginger_island: boolean
   todos: Todo[]
@@ -50,7 +53,7 @@ export function newSave(id: string, name: string, date: SaveData['date']): SaveD
   const now = new Date().toISOString()
   return {
     schema_version: SAVE_SCHEMA_VERSION, id, name, date, plots: [], machines: { keg: 0, preserves_jar: 0 },
-    greenhouse: null, animal_housing: { coop: 0, barn: 0 }, buildings: [],
+    greenhouse: { crop_id: 'ancient_fruit', planted: null, plants: 0 }, animal_housing: { coop: [], barn: [] }, buildings: {},
     skills: { farming_level: 0, professions: [] }, ginger_island: false, todos: [],
     last_backup_at: null, created_at: now, updated_at: now,
   }
@@ -59,7 +62,7 @@ export function newSave(id: string, name: string, date: SaveData['date']): SaveD
 export async function listSaves(): Promise<SaveData[]> {
   const ks = (await keys(store)).filter((k) => k !== ACTIVE)
   const all = await Promise.all(ks.map((k) => get<SaveData>(k, store)))
-  return all.filter((s): s is SaveData => !!s).sort((a, b) => a.created_at.localeCompare(b.created_at))
+  return all.filter((s): s is SaveData => !!s).map((s) => (s.schema_version < SAVE_SCHEMA_VERSION ? migrateSave(s, s.schema_version) : s)).sort((a, b) => a.created_at.localeCompare(b.created_at))
 }
 
 export async function putSave(s: SaveData) {
@@ -73,3 +76,26 @@ export async function deleteSave(id: string) {
 
 export const getActiveId = () => get<string>(ACTIVE, store)
 export const setActiveId = (id: string) => set(ACTIVE, id, store)
+
+/** ย้ายเซฟเวอร์ชันเก่าขึ้นเวอร์ชันปัจจุบัน — ใช้ทั้งตอนเปิดแอปและตอนกู้ไฟล์สำรอง */
+export function migrateSave(s: any, from: number): SaveData {
+  if (from > SAVE_SCHEMA_VERSION) throw new Error('ไฟล์นี้มาจากแอปเวอร์ชันใหม่กว่า อัปเดตแอปก่อนแล้วลองอีกครั้ง')
+  let o = { ...s }
+  if (from < 2) {
+    const lv = (n: number) => (n > 0 ? [n] : []) as HouseLevel[]
+    o = {
+      ...o,
+      plots: (o.plots ?? []).map((p: any) => {
+        const sp = p.sprinklers?.[0] ?? { kind: 'quality', count: 0 }
+        const kind = sp.kind === 'iridium_pressure' ? 'iridium' : sp.kind
+        const split = p.split ?? { flower: 0, once: 0, regrow: 0 }
+        return { id: p.id, name: p.name, location: p.location, sprinkler: { kind, count: sp.count, nozzle: sp.kind === 'iridium_pressure' },
+          tiles: split.flower + split.once + split.regrow, split }
+      }),
+      greenhouse: o.greenhouse ? { crop_id: 'ancient_fruit', planted: o.greenhouse.planted ?? null, plants: o.greenhouse.plants ?? 0 } : { crop_id: 'ancient_fruit', planted: null, plants: 0 },
+      animal_housing: { coop: lv(o.animal_housing?.coop ?? 0), barn: lv(o.animal_housing?.barn ?? 0) },
+      buildings: Array.isArray(o.buildings) ? Object.fromEntries(o.buildings.map((b: string) => [b, 1])) : (o.buildings ?? {}),
+    }
+  }
+  return { ...o, schema_version: SAVE_SCHEMA_VERSION }
+}

@@ -5,6 +5,14 @@ import {
   ItemRow, OfflineBanner, Page, PrimaryButton, SecondaryButton, SectionHead, Skeleton, Stepper, Tile, WarnBar,
 } from './ui'
 import { Stage1Data } from './stage1'
+import { AnimalHousing, Buildings, EditPlot, FarmError, Greenhouse, MyFarm, MyFarmIsland } from './myfarm'
+import { Component, type ComponentChildren } from 'preact'
+
+class Catch extends Component<{ children: ComponentChildren }, { e: Error | null }> {
+  state = { e: null as Error | null }
+  static getDerivedStateFromError(e: Error) { return { e } }
+  render() { return this.state.e ? <FarmError e={this.state.e} /> : this.props.children }
+}
 
 /* ---------- แถบนำทางล่าง (จากบอร์ด 01 Today) ---------- */
 const TABS = [
@@ -166,7 +174,7 @@ function StorageTest() {
 }
 
 /* ---------- หน้ารวมของขั้น 0 ใต้แท็บเพิ่มเติม ---------- */
-type Sub = 'components' | 'states' | 'storage' | 'splash' | 'data'
+type Sub = string
 function Stage0Menu({ go }: { go: (s: Sub) => void }) {
   return (
     <Page title="เพิ่มเติม" sub="หน้าตรวจของขั้น 0–1 (ชั่วคราว)">
@@ -182,8 +190,8 @@ function Stage0Menu({ go }: { go: (s: Sub) => void }) {
 }
 
 function parseHash(): { tab: number; sub?: Sub } {
-  const m = location.hash.match(/^#\/(\d)(?:\/(\w+))?/)
-  return m ? { tab: Math.min(4, +m[1]), sub: m[2] as Sub | undefined } : { tab: 0 }
+  const m = location.hash.match(/^#\/(\d)(?:\/([\w/-]+))?/)
+  return m ? { tab: Math.min(4, +m[1]), sub: m[2] } : { tab: 0 }
 }
 
 export function App() {
@@ -191,7 +199,7 @@ export function App() {
   const [online, setOnline] = useState(navigator.onLine)
   const [boot, setBoot] = useState(0)
   useEffect(() => {
-    const h = () => setRoute(parseHash())
+    const h = () => { setRoute(parseHash()); document.querySelector('main')?.scrollTo(0, 0) }
     const on = () => setOnline(navigator.onLine)
     addEventListener('hashchange', h); addEventListener('online', on); addEventListener('offline', on)
     navigator.storage?.persist?.().catch(() => {})
@@ -202,7 +210,12 @@ export function App() {
   const nav = (tab: number, sub?: Sub) => { location.hash = `#/${tab}${sub ? '/' + sub : ''}` }
 
   let body
-  if (route.sub === 'components') body = <ComponentsDemo />
+  const sub = route.sub ?? ''
+  if (route.tab === 2) {
+    body = <Catch key={sub}>{sub === 'island' ? <MyFarmIsland /> : sub === 'animals' ? <AnimalHousing /> : sub === 'greenhouse' ? <Greenhouse />
+      : sub === 'buildings' ? <Buildings /> : sub.startsWith('plot/') ? <EditPlot key={sub} id={sub.slice(5)} /> : <MyFarm />}</Catch>
+  }
+  else if (route.sub === 'components') body = <ComponentsDemo />
   else if (route.sub === 'states') body = <StatesDemo />
   else if (route.sub === 'storage') body = <StorageTest />
   else if (route.sub === 'data') body = <Stage1Data />
@@ -220,7 +233,7 @@ export function App() {
         {!online && <div style={{ padding: '52px 16px 0', marginBottom: -38 }}><OfflineBanner /></div>}
         {body}
       </main>
-      <BottomNav tab={route.tab} onTab={(i) => nav(i)} />
+      {!(route.tab === 2 && sub.startsWith('plot/')) && <BottomNav tab={route.tab} onTab={(i) => nav(i)} />}
     </div>
   )
 }
