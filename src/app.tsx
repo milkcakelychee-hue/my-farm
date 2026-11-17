@@ -5,6 +5,7 @@ import {
   ItemRow, OfflineBanner, Page, PrimaryButton, SecondaryButton, SectionHead, Skeleton, Stepper, Tile, WarnBar,
 } from './ui'
 import { Stage1Data } from './stage1'
+import { AdvisorFresh, AdvisorProcess, AnimalAdvisor, Calculate, SeedPlan, Skills } from './calculate'
 import { AnimalHousing, Buildings, EditPlot, FarmError, Greenhouse, MyFarm, MyFarmIsland } from './myfarm'
 import { Component, type ComponentChildren } from 'preact'
 
@@ -213,7 +214,10 @@ export function App() {
   const sub = route.sub ?? ''
   if (route.tab === 2) {
     body = <Catch key={sub}>{sub === 'island' ? <MyFarmIsland /> : sub === 'animals' ? <AnimalHousing /> : sub === 'greenhouse' ? <Greenhouse />
-      : sub === 'buildings' ? <Buildings /> : sub.startsWith('plot/') ? <EditPlot key={sub} id={sub.slice(5)} /> : <MyFarm />}</Catch>
+      : sub === 'buildings' ? <Buildings /> : sub === 'skills' ? <Skills /> : sub.startsWith('plot/') ? <EditPlot key={sub} id={sub.slice(5)} /> : <MyFarm />}</Catch>
+  }
+  else if (route.tab === 3) {
+    body = <Catch key={sub}>{sub === 'fresh' ? <AdvisorFresh /> : sub === 'process' ? <AdvisorProcess /> : sub === 'seeds' ? <SeedPlan /> : sub === 'animals' ? <AnimalAdvisor /> : <Calculate />}</Catch>
   }
   else if (route.sub === 'components') body = <ComponentsDemo />
   else if (route.sub === 'states') body = <StatesDemo />

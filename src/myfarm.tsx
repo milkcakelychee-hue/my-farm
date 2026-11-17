@@ -11,16 +11,16 @@ import type { HouseLevel, Plot, SaveData, Season, SprinklerKind } from './data/s
 import { ConfirmDelete, EmptyState, Skeleton } from './ui'
 
 type S = JSX.CSSProperties
-const BRAND160 = 'linear-gradient(160deg,#FFD25E 0%,#FDB927 55%,#F7A441 100%)'
-const BRAND100 = 'linear-gradient(100deg,#FFD25E 0%,#FDB927 50%,#F7A441 100%)'
-const COL = { flower: '#E985A6', once: '#FDB927', regrow: '#C5D68F' }
-const NA = 'ยังไม่มีข้อมูล'
-const n = (v: number) => v.toLocaleString('en-US')
+export const BRAND160 = 'linear-gradient(160deg,#FFD25E 0%,#FDB927 55%,#F7A441 100%)'
+export const BRAND100 = 'linear-gradient(100deg,#FFD25E 0%,#FDB927 50%,#F7A441 100%)'
+export const COL = { flower: '#E985A6', once: '#FDB927', regrow: '#C5D68F' }
+export const NA = 'ยังไม่มีข้อมูล'
+export const n = (v: number) => v.toLocaleString('en-US')
 export const go = (sub?: string) => { location.hash = `#/2${sub ? '/' + sub : ''}` }
 
 /* ---------- ชิ้นส่วนที่ใช้ซ้ำ (ค่าจากบอร์ด) ---------- */
-const P = { fill: 'none', 'stroke-linecap': 'round', 'stroke-linejoin': 'round' } as const
-const I = {
+export const P = { fill: 'none', 'stroke-linecap': 'round', 'stroke-linejoin': 'round' } as const
+export const I = {
   chev: (s = 18) => <svg aria-hidden="true" width={s} height={s} viewBox="0 0 24 24" stroke="#26201A" stroke-width="2.6" {...P}><path d="M9 6l6 6-6 6" /></svg>,
   down: <svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" stroke="#26201A" stroke-width="2.6" {...P}><path d="M6 9l6 6 6-6" /></svg>,
   back: <svg aria-hidden="true" width="20" height="20" viewBox="0 0 24 24" stroke="#26201A" stroke-width="2.6" {...P}><path d="M15 6l-6 6 6 6" /></svg>,
@@ -32,15 +32,15 @@ const I = {
 }
 
 /** ช่องไอคอน: ใช้รูปจากฐานข้อมูลถ้ามี ไม่มีก็เป็นกรอบเส้นประตามบอร์ด */
-function Slot({ size, r, file, on }: { size: number; r: number; file?: string; on?: boolean }) {
+export function Slot({ size, r, file, on }: { size: number; r: number; file?: string; on?: boolean }) {
   if (file) return <img src={`${import.meta.env.BASE_URL}img/${file}`} alt="" width={size} height={size} style={{ flex: 'none', imageRendering: 'pixelated', objectFit: 'contain' }} />
   return <span aria-hidden="true" style={{ flex: 'none', width: size, height: size, boxSizing: 'border-box', borderRadius: r, border: on ? '2px dashed rgba(255,255,255,.75)' : '2px dashed #CDBEA6', background: on ? 'rgba(255,255,255,.22)' : '#F6F0E4' }} />
 }
 
-function Body({ children, bottom = 20 }: { children: ComponentChildren; bottom?: number }) {
+export function Body({ children, bottom = 20 }: { children: ComponentChildren; bottom?: number }) {
   return <div style={{ padding: `52px 16px ${bottom}px`, display: 'flex', flexDirection: 'column', gap: 12 }}>{children}</div>
 }
-function Head({ title, note }: { title: string; note?: string }) {
+export function Head({ title, note }: { title: string; note?: string }) {
   return (
     <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', gap: 8 }}>
       <span style={{ fontSize: 15, fontWeight: 700 }}>{title}</span>
@@ -48,13 +48,13 @@ function Head({ title, note }: { title: string; note?: string }) {
     </div>
   )
 }
-const card: S = { display: 'flex', flexDirection: 'column', gap: 10, padding: 14, borderRadius: 20, background: '#FFFFFF', boxShadow: '0 2px 10px rgba(90,60,20,.08)' }
-const Card = ({ children, gap = 10, style }: { children: ComponentChildren; gap?: number; style?: S }) => <div style={{ ...card, gap, ...style }}>{children}</div>
-const Divider = () => <div style={{ height: 1, background: '#ECE6DC' }} />
-function SubHeader({ title, sub, back = '' }: { title: string; sub?: string; back?: string }) {
+export const card: S = { display: 'flex', flexDirection: 'column', gap: 10, padding: 14, borderRadius: 20, background: '#FFFFFF', boxShadow: '0 2px 10px rgba(90,60,20,.08)' }
+export const Card = ({ children, gap = 10, style }: { children: ComponentChildren; gap?: number; style?: S }) => <div style={{ ...card, gap, ...style }}>{children}</div>
+export const Divider = () => <div style={{ height: 1, background: '#ECE6DC' }} />
+export function SubHeader({ title, sub, back = '', onBack }: { title: string; sub?: string; back?: string; onBack?: () => void }) {
   return (
     <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-      <button aria-label="กลับ" onClick={() => go(back)} style={{ flex: 'none', width: 44, height: 44, padding: 0, border: 0, borderRadius: '50%', background: '#FFFFFF', boxShadow: '0 2px 10px rgba(90,60,20,.08)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>{I.back}</button>
+      <button aria-label="กลับ" onClick={() => (onBack ? onBack() : go(back))} style={{ flex: 'none', width: 44, height: 44, padding: 0, border: 0, borderRadius: '50%', background: '#FFFFFF', boxShadow: '0 2px 10px rgba(90,60,20,.08)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>{I.back}</button>
       <div style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column' }}>
         <h1 style={{ margin: 0, fontSize: 26, fontWeight: 800, lineHeight: 1.25 }}>{title}</h1>
         {sub && <span style={{ fontSize: 13, color: '#6B6157' }}>{sub}</span>}
@@ -62,7 +62,7 @@ function SubHeader({ title, sub, back = '' }: { title: string; sub?: string; bac
     </div>
   )
 }
-function Info({ title, children }: { title: string; children: ComponentChildren }) {
+export function Info({ title, children }: { title: string; children: ComponentChildren }) {
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 4, padding: 12, borderRadius: 16, background: '#FFF8E0', boxShadow: 'inset 0 0 0 1.5px #F0DFB4' }}>
       <span style={{ fontSize: 13, fontWeight: 700 }}>{title}</span>
@@ -78,7 +78,7 @@ function DashedAdd({ children, onClick }: { children: ComponentChildren; onClick
   )
 }
 /** ตัวนับ: ขนาด 44 (หน้า My Farm/อาคาร) หรือ 48 (หน้าแก้แปลง/เรือนกระจก) */
-function Count({ value, onChange, min = 0, max, big, font }: { value: number; onChange: (v: number) => void; min?: number; max?: number; big?: boolean; font?: number }) {
+export function Count({ value, onChange, min = 0, max, big, font }: { value: number; onChange: (v: number) => void; min?: number; max?: number; big?: boolean; font?: number }) {
   const sz = big ? 48 : 44
   const b: S = { width: sz, height: sz, padding: 0, border: 0, borderRadius: big ? 14 : 12, display: 'flex', alignItems: 'center', justifyContent: 'center' }
   const set = (v: number) => onChange(Math.max(min, max == null ? v : Math.min(max, v)))
@@ -91,7 +91,7 @@ function Count({ value, onChange, min = 0, max, big, font }: { value: number; on
   )
 }
 /** ทายล์เลือก (สูง 84 · ไอคอน 32) */
-function Pick({ label, on, onClick, file, h = 84, icon = 32, sub, iconR = 8 }: { label: string; on?: boolean; onClick?: () => void; file?: string; h?: number; icon?: number; sub?: string; iconR?: number }) {
+export function Pick({ label, on, onClick, file, h = 84, icon = 32, sub, iconR = 8 }: { label: string; on?: boolean; onClick?: () => void; file?: string; h?: number; icon?: number; sub?: string; iconR?: number }) {
   return (
     <button aria-pressed={!!on} onClick={onClick} style={{
       flex: 1, minWidth: 0, height: h, boxSizing: 'border-box', padding: sub ? '6px 2px' : '8px 4px 6px', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: sub ? 2 : 5, border: 0, borderRadius: 14, color: '#26201A',
@@ -103,7 +103,7 @@ function Pick({ label, on, onClick, file, h = 84, icon = 32, sub, iconR = 8 }: {
     </button>
   )
 }
-function Bar({ split, total, h = 14 }: { split: Plot['split']; total: number; h?: number }) {
+export function Bar({ split, total, h = 14 }: { split: Plot['split']; total: number; h?: number }) {
   const free = Math.max(0, total - split.flower - split.once - split.regrow)
   return (
     <div style={{ display: 'flex', gap: 2, height: h, borderRadius: 7, overflow: 'hidden', background: '#ECE6DC' }}>
@@ -124,10 +124,10 @@ function Legend({ split }: { split: Plot['split'] }) {
     </div>
   )
 }
-function Overlay({ children }: { children: ComponentChildren }) {
+export function Overlay({ children }: { children: ComponentChildren }) {
   return <div style={{ position: 'fixed', inset: 0, zIndex: 40, display: 'flex', alignItems: 'center', padding: 16, background: 'rgba(38,32,26,.35)' }}><div style={{ flex: 1 }}>{children}</div></div>
 }
-function StageNote({ onClose, what }: { onClose: () => void; what: string }) {
+export function StageNote({ onClose, what }: { onClose: () => void; what: string }) {
   return <Overlay><ConfirmDelete title={`${what} ทำในขั้น 3`} body="หน้านี้อยู่ในขั้นถัดไป ตอนนี้ยังเปิดไม่ได้" onCancel={onClose} onConfirm={onClose} confirmLabel="ตกลง" /></Overlay>
 }
 
@@ -139,12 +139,12 @@ const plotSub = (d: FarmData, p: Plot) => {
 }
 const sum = (ps: Plot[]) => ps.reduce((a, p) => ({ tiles: a.tiles + p.tiles, flower: a.flower + p.split.flower, once: a.once + p.split.once, regrow: a.regrow + p.split.regrow }), { tiles: 0, flower: 0, once: 0, regrow: 0 })
 
-function useAll() {
+export function useAll() {
   const s = useSave(); const d = useFarmData()
   if (d instanceof Error) throw d
   return s && d ? { s, d } : null
 }
-const Loading = () => <Body><Skeleton /><Skeleton /></Body>
+export const Loading = () => <Body><Skeleton /><Skeleton /></Body>
 /** เปิดฐานข้อมูลไม่ได้ → สถานะว่างของบอร์ด 34 แทนการโหลดค้าง */
 export function FarmError({ e }: { e: Error }) {
   return <Body><EmptyState title="เปิดฐานข้อมูลไม่ได้" body={e.message} /></Body>
@@ -228,7 +228,7 @@ export function MyFarm() {
     <Body>
       <FarmTitle s={s} onSave={() => setNote('สลับเซฟ')} />
       <Summary title="ช่องปลูกทั้งฟาร์ม" plots={plots} labels={[['flower', 'ไม้ดอก'], ['once', 'โตครั้งเดียว'], ['regrow', 'เก็บซ้ำ']]} />
-      <button onClick={() => setNote('วางแผนซื้อเมล็ด')} style={{ width: '100%', boxSizing: 'border-box', padding: 12, display: 'flex', alignItems: 'center', gap: 12, border: 0, borderRadius: 20, background: '#FFFFFF', boxShadow: 'inset 0 0 0 2px #FDB927', color: '#26201A', textAlign: 'left' }}>
+      <button onClick={() => { location.hash = '#/3/seeds' }} style={{ width: '100%', boxSizing: 'border-box', padding: 12, display: 'flex', alignItems: 'center', gap: 12, border: 0, borderRadius: 20, background: '#FFFFFF', boxShadow: 'inset 0 0 0 2px #FDB927', color: '#26201A', textAlign: 'left' }}>
         <Slot size={44} r={12} />
         <span style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', gap: 1 }}>
           <span style={{ fontSize: 16, fontWeight: 800, lineHeight: 1.3 }}>วางแผนซื้อเมล็ด · {s.date.season}</span>
@@ -298,7 +298,7 @@ export function MyFarm() {
       <Head title="อื่น ๆ" note="ระดับ·อาชีพใช้ในการคำนวณ" />
       <div style={{ display: 'flex', gap: 8 }}>
         <Pick label="อาคาร" onClick={() => go('buildings')} />
-        <Pick label="ระดับ·อาชีพ" onClick={() => setNote('ระดับ·อาชีพ')} />
+        <Pick label="ระดับ·อาชีพ" onClick={() => go('skills')} />
       </div>
       {note && <StageNote what={note} onClose={() => setNote(null)} />}
     </Body>

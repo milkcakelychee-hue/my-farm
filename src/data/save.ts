@@ -2,10 +2,11 @@
 // เนื้อหาตามสเปกข้อ 5: แอปจด "ความจุ" ไม่ใช่ log
 import { createStore, get, set, del, keys } from 'idb-keyval'
 
-export const SAVE_SCHEMA_VERSION = 2
+export const SAVE_SCHEMA_VERSION = 3
 export const MAX_SAVES = 3
 export type Season = 'Spring' | 'Summer' | 'Fall' | 'Winter'
 export type SprinklerKind = 'basic' | 'quality' | 'iridium' | 'custom'
+export type SkillName = 'Farming' | 'Fishing' | 'Foraging' | 'Mining'
 export type GameDate = { season: Season; day: number; year: number }
 export type HouseLevel = 1 | 2 | 3                // 1 = Coop/Barn, 2 = Big, 3 = Deluxe
 
@@ -38,7 +39,8 @@ export interface SaveData {
   greenhouse: { crop_id: 'ancient_fruit'; planted: GameDate | null; plants: number }
   animal_housing: { coop: HouseLevel[]; barn: HouseLevel[] }  // หนึ่งตัวเลขต่อหนึ่งหลัง = ขั้นของหลังนั้น
   buildings: Record<string, number>                // building.id -> จำนวนที่สร้างแล้ว (ไม่รวม Coop/Barn)
-  skills: { farming_level: number; professions: string[] }
+  skills: { levels: Record<SkillName, number>; professions: string[] }   // professions = profession.id ที่เลือก
+  calc?: { fertilizer?: string }                  // ปุ๋ยที่ใช้คำนวณ (item id)
   ginger_island: boolean
   todos: Todo[]
   last_backup_at: string | null
@@ -54,7 +56,7 @@ export function newSave(id: string, name: string, date: SaveData['date']): SaveD
   return {
     schema_version: SAVE_SCHEMA_VERSION, id, name, date, plots: [], machines: { keg: 0, preserves_jar: 0 },
     greenhouse: { crop_id: 'ancient_fruit', planted: null, plants: 0 }, animal_housing: { coop: [], barn: [] }, buildings: {},
-    skills: { farming_level: 0, professions: [] }, ginger_island: false, todos: [],
+    skills: { levels: { Farming: 0, Fishing: 0, Foraging: 0, Mining: 0 }, professions: [] }, ginger_island: false, todos: [],
     last_backup_at: null, created_at: now, updated_at: now,
   }
 }
@@ -96,6 +98,10 @@ export function migrateSave(s: any, from: number): SaveData {
       animal_housing: { coop: lv(o.animal_housing?.coop ?? 0), barn: lv(o.animal_housing?.barn ?? 0) },
       buildings: Array.isArray(o.buildings) ? Object.fromEntries(o.buildings.map((b: string) => [b, 1])) : (o.buildings ?? {}),
     }
+  }
+  if (from < 3) {
+    const lv = o.skills?.farming_level ?? 0
+    o = { ...o, skills: { levels: { Farming: lv, Fishing: 0, Foraging: 0, Mining: 0 }, professions: o.skills?.professions ?? [] } }
   }
   return { ...o, schema_version: SAVE_SCHEMA_VERSION }
 }

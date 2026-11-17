@@ -66,7 +66,9 @@ export const capacity = (d: FarmData, kind: 'coop' | 'barn', level: number): num
 
 /** ราคาจากสูตรในฐานข้อมูล เช่น "price*3" หรือ "price*2+50" */
 export function applyFormula(formula: string | null, price: number | null): number | null {
-  const m = formula?.replace(/\s/g, '').match(/^price\*([\d.]+)(?:\+([\d.]+))?$/)
+  const f = formula?.replace(/\s/g, '')
+  if (f && /^\d+$/.test(f)) return +f                // ราคาคงที่ เช่น Cheese = 230
+  const m = f?.match(/^price\*([\d.]+)(?:\+([\d.]+))?$/)
   if (!m || price == null) return null
   return Math.floor(price * +m[1] + (m[2] ? +m[2] : 0))
 }
