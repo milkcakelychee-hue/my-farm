@@ -23,7 +23,7 @@ function useQ<T>(fn: () => Promise<T>, deps: unknown[]): T | null {
 }
 
 /* ---------- เปิดล่าสุด (เก็บในเครื่องนี้เท่านั้น) ---------- */
-type Recent = { href: string; name_en: string; name_th: string | null; img?: string; sub: string }
+type Recent = { href: string; name_en: string; name_th: string | null; img?: string; sub: string; sve?: unknown }
 const RKEY = 'myfarm.wiki.recent'
 const readRecent = (): Recent[] => { try { return JSON.parse(localStorage.getItem(RKEY) ?? '[]') } catch { return [] } }
 function pushRecent(r: Recent) {
@@ -41,12 +41,14 @@ function SearchBox({ value, onInput }: { value: string; onInput: (v: string) => 
     </label>
   )
 }
-function ListRow({ img, en, th, sub, onClick, size = 48 }: { img?: string | null; en: string; th: string | null; sub?: string; onClick: () => void; size?: number }) {
+/** ป้ายบอกว่ามาจาก SVE */
+export const SveTag = ({ big }: { big?: boolean }) => <span style={{ flex: 'none', display: 'inline-block', verticalAlign: 'middle', marginLeft: 6, padding: big ? '2px 8px' : '1px 6px', borderRadius: 6, background: '#E6E0FB', color: '#4B3F8F', fontSize: big ? 12 : 10.5, fontWeight: 800, lineHeight: 1.4, letterSpacing: .3 }}>SVE</span>
+function ListRow({ img, en, th, sub, onClick, size = 48, sve }: { img?: string | null; en: string; th: string | null; sub?: string; onClick: () => void; size?: number; sve?: unknown }) {
   return (
     <button onClick={onClick} style={{ width: '100%', boxSizing: 'border-box', padding: '10px 12px', display: 'flex', alignItems: 'center', gap: 12, border: 0, borderRadius: 20, background: '#FFFFFF', boxShadow: '0 2px 10px rgba(90,60,20,.08)', color: '#26201A', textAlign: 'left' }}>
       <Slot size={size} r={12} file={img ?? undefined} />
       <span style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', gap: 1 }}>
-        <span style={{ fontSize: 16, fontWeight: 700, lineHeight: 1.3 }}>{en}</span>
+        <span style={{ fontSize: 16, fontWeight: 700, lineHeight: 1.3 }}>{en}{sve ? <SveTag /> : null}</span>
         <span style={{ fontSize: 13, lineHeight: 1.3, color: '#6B6157' }}>{th ?? 'ชื่อไทย'}</span>
         {sub && <span style={{ fontSize: 12.5, lineHeight: 1.3, color: '#4F463D', marginTop: 2 }}>{sub}</span>}
       </span>
@@ -93,13 +95,13 @@ function SeasonBar({ on }: { on: string[] }) {
     </div>
   )
 }
-function Hero({ img, en, th, chips, size = 96 }: { img?: string | null; en: string; th: string | null; chips: ComponentChildren; size?: number }) {
+function Hero({ img, en, th, chips, size = 96, sve }: { img?: string | null; en: string; th: string | null; chips: ComponentChildren; size?: number; sve?: unknown }) {
   return (
     <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
       <Slot size={size} r={20} file={img ?? undefined} />
       <div style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', gap: 6 }}>
         <div style={{ display: 'flex', flexDirection: 'column' }}>
-          <h1 style={{ margin: 0, fontSize: 28, fontWeight: 800, lineHeight: 1.2 }}>{en}</h1>
+          <h1 style={{ margin: 0, fontSize: 28, fontWeight: 800, lineHeight: 1.2 }}>{en}{sve ? <SveTag big /> : null}</h1>
           <span style={{ fontSize: 15, color: '#6B6157', lineHeight: 1.35 }}>{th ?? 'ชื่อไทย'}</span>
         </div>
         <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>{chips}</div>
@@ -135,12 +137,12 @@ function QualityPrices({ price, c, img }: { price: number | null; c: Record<stri
     </div>
   )
 }
-function ItemLine({ img, en, th, right, onClick }: { img?: string | null; en: string; th: string | null; right: ComponentChildren; onClick?: () => void }) {
+function ItemLine({ img, en, th, right, onClick, sve }: { img?: string | null; en: string; th: string | null; right: ComponentChildren; onClick?: () => void; sve?: unknown }) {
   return (
     <button onClick={onClick} disabled={!onClick} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: 0, border: 0, background: 'none', color: '#26201A', textAlign: 'left' }}>
       <Slot size={40} r={10} file={img ?? undefined} />
       <span style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', gap: 1 }}>
-        <span style={{ fontSize: 15, fontWeight: 700, lineHeight: 1.3 }}>{en}</span>
+        <span style={{ fontSize: 15, fontWeight: 700, lineHeight: 1.3 }}>{en}{sve ? <SveTag /> : null}</span>
         <span style={{ fontSize: 13, lineHeight: 1.3, color: '#6B6157' }}>{th ?? 'ชื่อไทย'}</span>
       </span>
       {right}
@@ -180,7 +182,7 @@ export function WikiHome() {
         <>
           <Head title="ผลการค้นหา" note={res ? `${res.length} รายการ` : ''} />
           {res?.length === 0 && <EmptyState title="ไม่พบ" body={`ไม่มีชื่อที่ตรงกับ "${q}"`} />}
-          {res?.map((r: Row) => <ListRow img={file(r.img)} en={r.name_en} th={r.name_th} sub={r.category ?? undefined} onClick={() => goWiki(`${r.kind}/${r.id}`)} />)}
+          {res?.map((r: Row) => <ListRow img={file(r.img)} sve={r.sve} en={r.name_en} th={r.name_th} sub={r.category ?? undefined} onClick={() => goWiki(`${r.kind}/${r.id}`)} />)}
         </>
       ) : (
         <>
@@ -202,7 +204,7 @@ export function WikiHome() {
             ))}
           </div>
           {recent.length > 0 && <Head title="เปิดล่าสุด" />}
-          {recent.length > 0 && <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>{recent.map((r) => <ListRow img={r.img} en={r.name_en} th={r.name_th} sub={r.sub} onClick={() => { location.hash = r.href }} />)}</div>}
+          {recent.length > 0 && <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>{recent.map((r) => <ListRow img={r.img} sve={r.sve} en={r.name_en} th={r.name_th} sub={r.sub} onClick={() => { location.hash = r.href }} />)}</div>}
         </>
       )}
       {note && <StageNote what={`หมวด${note}`} onClose={() => setNote(null)} stage={7} />}
@@ -246,7 +248,7 @@ export function WikiCrops() {
       <Head title={`ปลูกได้ใน ${cur}`} note={list ? `${list.length} ชนิด` : ''} />
       {!list ? <Loading /> : list.length === 0 ? <EmptyState title="ไม่พบ" /> : (
         <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-          {list.map((r) => <ListRow img={file(r.img)} en={r.name_en} th={r.name_th} sub={`โต ${r.growth_days} วัน · ${r.regrow_days ? `เก็บซ้ำทุก ${r.regrow_days} วัน` : 'เก็บครั้งเดียว'}`} onClick={() => goWiki('item/' + r.id)} />)}
+          {list.map((r) => <ListRow img={file(r.img)} sve={r.sve} en={r.name_en} th={r.name_th} sub={`โต ${r.growth_days} วัน · ${r.regrow_days ? `เก็บซ้ำทุก ${r.regrow_days} วัน` : 'เก็บครั้งเดียว'}`} onClick={() => goWiki('item/' + r.id)} />)}
         </div>
       )}
     </Body>
@@ -265,7 +267,7 @@ export function WikiItem({ id }: { id: string }) {
   useEffect(() => {
     if (!data?.it) return
     const sub = data.crop ? `พืชผล · ${data.crop.seasons?.split(',').join(', ')}` : data.fish ? `ปลา · ${arr(data.fish.seasons).join(', ')}` : data.it.category ?? ''
-    pushRecent({ href: `#/1/item/${id}`, name_en: data.it.name_en, name_th: data.it.name_th, img: file(data.it.img), sub })
+    pushRecent({ href: `#/1/item/${id}`, name_en: data.it.name_en, name_th: data.it.name_th, img: file(data.it.img), sub, sve: data.it.sve })
   }, [data])
   if (data === null || !s || !cd || cd instanceof Error) return <Loading />
   const { it, crop, uses, prods, fish } = data
@@ -291,7 +293,7 @@ export function WikiItem({ id }: { id: string }) {
   return (
     <Body bottom={28}>
       <Back />
-      <Hero img={file(it.img)} en={it.name_en} th={it.name_th} chips={<>
+      <Hero img={file(it.img)} sve={it.sve} en={it.name_en} th={it.name_th} chips={<>
         <Chip bg="#FFEBBF" icon={CUBE}>{crop ? 'พืชผล' : it.category ?? '—'}</Chip>
         {seasons.map((x) => <Chip bg="#E7EFCB" icon={LEAF}>{x}</Chip>)}
       </>} />
@@ -332,7 +334,7 @@ export function WikiItem({ id }: { id: string }) {
           <span style={{ fontSize: 13, fontWeight: 700 }}>แปรรูป</span>
           {prods.map((p) => {
             const v = applyFormula(p.price_formula, it.sell_price)
-            return <ItemLine img={file(p.img)} en={p.name_en} th={p.name_th} right={<span style={{ flex: 'none', fontSize: 14, fontWeight: 700 }}>{v == null ? '—' : `${n(Math.floor(v * b.artisan + 1e-6))}g`}</span>} />
+            return <ItemLine img={file(p.img)} sve={p.sve} en={p.name_en} th={p.name_th} right={<span style={{ flex: 'none', fontSize: 14, fontWeight: 700 }}>{v == null ? '—' : `${n(Math.floor(v * b.artisan + 1e-6))}g`}</span>} />
           })}
         </>}
       </Card>
@@ -347,7 +349,7 @@ function UsesCard({ uses }: { uses: Awaited<ReturnType<typeof usesOf>> }) {
       <Head title="ใช้ทำอะไรได้" />
       <Card gap={12}>
         {uses.map((u) => (
-          <ItemLine img={file(u.img)} en={u.name_en} th={u.name_th} onClick={u.kind === 'love' ? () => goWiki('npc/' + u.id) : u.kind === 'recipe' ? () => goWiki('item/' + u.id) : undefined}
+          <ItemLine img={file(u.img)} sve={u.sve} en={u.name_en} th={u.name_th} onClick={u.kind === 'love' ? () => goWiki('npc/' + u.id) : u.kind === 'recipe' ? () => goWiki('item/' + u.id) : undefined}
             right={u.kind === 'recipe' ? <Chip bg="#FFEBBF" icon={CUBE}>{u.tag}</Chip> : u.kind === 'bundle' ? <Chip bg="#E6E0FB" icon={PIN()}>{u.tag}</Chip> : <Chip bg="#F7D9D3" icon={PERSON}>{u.tag}</Chip>} />
         ))}
       </Card>
@@ -459,7 +461,7 @@ export function WikiLocationFish({ id }: { id: string }) {
       <Head title={`ปลาที่ตกได้ · ${fish.length} ชนิด`} />
       {fish.length === 0 ? <EmptyState title="ไม่มีปลาที่นี่" /> : (
         <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-          {fish.map((f) => <ListRow img={file(f.img)} en={f.name_en} th={f.name_th} sub={[arr(f.seasons).join(', '), f.time_start == null ? null : `${hhmm(f.time_start)}–${hhmm(f.time_end)}`].filter(Boolean).join(' · ')} onClick={() => goWiki('item/' + f.id)} />)}
+          {fish.map((f) => <ListRow img={file(f.img)} sve={f.sve} en={f.name_en} th={f.name_th} sub={[arr(f.seasons).join(', '), f.time_start == null ? null : `${hhmm(f.time_start)}–${hhmm(f.time_end)}`].filter(Boolean).join(' · ')} onClick={() => goWiki('item/' + f.id)} />)}
         </div>
       )}
     </Body>
@@ -498,7 +500,7 @@ export function WikiFish() {
           {list.map((f) => {
             const w = weatherTh(f.weather)
             const t = f.time_start == null ? null : `${hhmm(f.time_start)}–${hhmm(f.time_end)}`
-            return <ListRow img={file(f.img)} en={f.name_en} th={f.name_th} sub={[t ?? 'ทั้งวัน', w && w !== 'ทุกสภาพอากาศ' ? w : null].filter(Boolean).join(' · ')} onClick={() => goWiki('item/' + f.id)} />
+            return <ListRow img={file(f.img)} sve={f.sve} en={f.name_en} th={f.name_th} sub={[t ?? 'ทั้งวัน', w && w !== 'ทุกสภาพอากาศ' ? w : null].filter(Boolean).join(' · ')} onClick={() => goWiki('item/' + f.id)} />
           })}
         </div>
       )}
@@ -520,7 +522,7 @@ function FishDetail({ f, uses, prods, c }: { f: FishRow; uses: Awaited<ReturnTyp
   return (
     <Body bottom={28}>
       <Back />
-      <Hero img={file(f.img)} en={f.name_en} th={f.name_th} chips={<><Chip bg="#FFEBBF" icon={CUBE}>ปลา</Chip>{locs.slice(0, 2).map((l) => <Chip bg="#E6E0FB" icon={PIN()}>{SPOTS.find((x) => x.match.test(l))?.th ?? l}</Chip>)}</>} />
+      <Hero img={file(f.img)} sve={f.sve} en={f.name_en} th={f.name_th} chips={<><Chip bg="#FFEBBF" icon={CUBE}>ปลา</Chip>{locs.slice(0, 2).map((l) => <Chip bg="#E6E0FB" icon={PIN()}>{SPOTS.find((x) => x.match.test(l))?.th ?? l}</Chip>)}</>} />
       <Card>
         <span style={{ fontSize: 14, fontWeight: 700 }}>ตกได้ตอนนี้ไหม <span style={{ fontWeight: 400, color: '#6B6157' }}>· {s.date.season} {s.date.day}</span></span>
         <div style={{ display: 'flex', gap: 8 }}>
@@ -565,7 +567,7 @@ function FishDetail({ f, uses, prods, c }: { f: FishRow; uses: Awaited<ReturnTyp
         <QualityPrices price={f.sell_price} c={c} img={file(f.img)} />
         {prods.length > 0 && <>
           <Divider /><span style={{ fontSize: 13, fontWeight: 700 }}>แปรรูป</span>
-          {prods.map((p) => { const v = applyFormula(p.price_formula, f.sell_price); return <ItemLine img={file(p.img)} en={p.name_en} th={p.name_th} right={<span style={{ flex: 'none', fontSize: 14, fontWeight: 700 }}>{v == null ? '—' : `${n(v)}g`}</span>} /> })}
+          {prods.map((p) => { const v = applyFormula(p.price_formula, f.sell_price); return <ItemLine img={file(p.img)} sve={p.sve} en={p.name_en} th={p.name_th} right={<span style={{ flex: 'none', fontSize: 14, fontWeight: 700 }}>{v == null ? '—' : `${n(v)}g`}</span>} /> })}
         </>}
       </Card>
       <UsesCard uses={uses} />
@@ -583,7 +585,7 @@ export function WikiBuildings() {
         <>
           <Head title={g} note={g === 'Robin' ? 'ช่างไม้' : 'พ่อมด'} />
           <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-            {rows.filter((r) => r.builder === g).map((r) => <ListRow img={file(r.img)} en={r.name_en} th={r.name_th} sub={r.cost_gold == null ? undefined : `${n(r.cost_gold)}g`} onClick={() => goWiki('building/' + r.id)} />)}
+            {rows.filter((r) => r.builder === g).map((r) => <ListRow img={file(r.img)} sve={r.sve} en={r.name_en} th={r.name_th} sub={r.cost_gold == null ? undefined : `${n(r.cost_gold)}g`} onClick={() => goWiki('building/' + r.id)} />)}
           </div>
         </>
       ))}
@@ -593,7 +595,7 @@ export function WikiBuildings() {
 export function WikiBuilding({ id }: { id: string }) {
   const s = useSave(); const fd = useFarmData(); const cd = useCalcData()
   const data = useQ(() => buildingFull(id), [id])
-  useEffect(() => { if (data?.b) pushRecent({ href: `#/1/building/${id}`, name_en: data.b.name_en, name_th: data.b.name_th, img: file(data.b.img), sub: `อาคาร · ${data.b.builder}` }) }, [data])
+  useEffect(() => { if (data?.b) pushRecent({ href: `#/1/building/${id}`, name_en: data.b.name_en, name_th: data.b.name_th, sve: data.b.sve, img: file(data.b.img), sub: `อาคาร · ${data.b.builder}` }) }, [data])
   if (!data || !s || !fd || fd instanceof Error || !cd || cd instanceof Error) return <Loading />
   const { b, mats, next } = data
   const kind = /barn/.test(id) ? 'barn' : /coop/.test(id) ? 'coop' : null
@@ -609,7 +611,7 @@ export function WikiBuilding({ id }: { id: string }) {
   return (
     <Body bottom={28}>
       <Back />
-      <Hero img={file(b.img)} en={b.name_en} th={b.name_th} chips={<><Chip bg="#FFEBBF" icon={CUBE}>อาคาร</Chip><Chip bg="#E6E0FB" icon={PERSON}>{b.builder}</Chip></>} />
+      <Hero img={file(b.img)} sve={b.sve} en={b.name_en} th={b.name_th} chips={<><Chip bg="#FFEBBF" icon={CUBE}>อาคาร</Chip><Chip bg="#E6E0FB" icon={PERSON}>{b.builder}</Chip></>} />
       <Card>
         <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
           <Slot size={40} r={10} file={file(b.img)} />
@@ -632,7 +634,7 @@ export function WikiBuilding({ id }: { id: string }) {
         </Card>}
       <Head title="ค่าสร้าง" note="วัตถุดิบ + เงิน" />
       <Card gap={12}>
-        {mats.map((m) => <ItemLine img={file(m.img)} en={m.name_en} th={m.name_th} onClick={() => goWiki('item/' + m.id)} right={<span style={{ flex: 'none', fontSize: 15, fontWeight: 800 }}>×{n(m.qty)}</span>} />)}
+        {mats.map((m) => <ItemLine img={file(m.img)} sve={m.sve} en={m.name_en} th={m.name_th} onClick={() => goWiki('item/' + m.id)} right={<span style={{ flex: 'none', fontSize: 15, fontWeight: 800 }}>×{n(m.qty)}</span>} />)}
         {mats.length > 0 && <Divider />}
         <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between' }}><span style={{ fontSize: 14, fontWeight: 700 }}>เงินตอนสร้าง</span><span style={{ fontSize: 18, fontWeight: 800 }}>{b.cost_gold == null ? NA : `${n(b.cost_gold)}g`}</span></div>
         <span style={{ fontSize: 12.5, color: '#6B6157' }}>เงินเป็นยอดที่ต้องมี ไม่เป็นงานรวบรวม</span>
@@ -682,7 +684,7 @@ export function WikiNpcs() {
       <TitleRow title="NPC" />
       <SearchBox value={q} onInput={setQ} />
       {!list ? <Loading /> : <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-        {list.map((r) => <ListRow img={file(r.img)} en={r.name_en} th={r.name_th} sub={r.birthday_season ? `วันเกิด ${r.birthday_season} ${r.birthday_day}` : 'วันเกิด: ยังไม่มีข้อมูล'} onClick={() => goWiki('npc/' + r.id)} />)}
+        {list.map((r) => <ListRow img={file(r.img)} sve={r.sve} en={r.name_en} th={r.name_th} sub={r.birthday_season ? `วันเกิด ${r.birthday_season} ${r.birthday_day}` : 'วันเกิด: ยังไม่มีข้อมูล'} onClick={() => goWiki('npc/' + r.id)} />)}
       </div>}
     </Body>
   )
@@ -693,7 +695,7 @@ export function WikiNpc({ id }: { id: string }) {
   const data = useQ(() => npcFull(id), [id])
   const [taste, setTaste] = useState('love')
   const [day, setDay] = useState<'normal' | 'rain' | 'other'>('normal')
-  useEffect(() => { if (data?.n) pushRecent({ href: `#/1/npc/${id}`, name_en: data.n.name_en, name_th: data.n.name_th, img: file(data.n.img), sub: `NPC${data.n.birthday_season ? ` · วันเกิด ${data.n.birthday_season} ${data.n.birthday_day}` : ''}` }) }, [data])
+  useEffect(() => { if (data?.n) pushRecent({ href: `#/1/npc/${id}`, name_en: data.n.name_en, name_th: data.n.name_th, sve: data.n.sve, img: file(data.n.img), sub: `NPC${data.n.birthday_season ? ` · วันเกิด ${data.n.birthday_season} ${data.n.birthday_day}` : ''}` }) }, [data])
   if (!data || !s) return <Loading />
   const { n: npc, gifts, sched, pts } = data
   let until: number | null = null
@@ -716,7 +718,7 @@ export function WikiNpc({ id }: { id: string }) {
   return (
     <Body bottom={28}>
       <Back />
-      <Hero img={file(npc.img)} en={npc.name_en} th={npc.name_th} chips={<><Chip bg="#FFEBBF" icon={CUBE}>NPC</Chip>{npc.marriageable ? <Chip bg="#F7D9D3" icon={PERSON}>แต่งงานได้</Chip> : null}</>} />
+      <Hero img={file(npc.img)} sve={npc.sve} en={npc.name_en} th={npc.name_th} chips={<><Chip bg="#FFEBBF" icon={CUBE}>NPC</Chip>{npc.marriageable ? <Chip bg="#F7D9D3" icon={PERSON}>แต่งงานได้</Chip> : null}</>} />
       <Head title="ข้อมูล" />
       <Card>
         <div style={{ display: 'flex', gap: 8 }}>
@@ -763,7 +765,7 @@ export function WikiNpc({ id }: { id: string }) {
           })}
         </TileGrid>
         {pts.friendship_points_per_heart && <span style={{ fontSize: 12.5, color: '#6B6157', lineHeight: 1.5 }}>หัวใจ 1 ดวง = {pts.friendship_points_per_heart} แต้ม · ชอบมาก +{pts.gift_points_love} แต้ม{pts.gift_birthday_mult ? ` · ให้ในวันเกิดได้ ×${pts.gift_birthday_mult}` : ''}</span>}
-        {list.length === 0 ? <span style={{ fontSize: 13, color: '#6B6157' }}>{NA}</span> : list.map((g) => <ItemLine img={file(g.img)} en={g.name_en} th={g.name_th} onClick={() => goWiki('item/' + g.id)} right={I.chev()} />)}
+        {list.length === 0 ? <span style={{ fontSize: 13, color: '#6B6157' }}>{NA}</span> : list.map((g) => <ItemLine img={file(g.img)} sve={g.sve} en={g.name_en} th={g.name_th} onClick={() => goWiki('item/' + g.id)} right={I.chev()} />)}
       </Card>
     </Body>
   )
