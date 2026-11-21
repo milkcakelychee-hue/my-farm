@@ -1,5 +1,5 @@
 // แท็บ Wiki — บอร์ด 15 WikiHome · 16 WikiCropList · 17 WikiCropDetail · 18 WikiFishList · 19 WikiFishDetail · 20 WikiBuildingDetail · 21 WikiNpcDetail
-import type { ComponentChildren, JSX } from 'preact'
+import type { ComponentChildren } from 'preact'
 import { useEffect, useState } from 'preact/hooks'
 import { useSave } from './data/useSave'
 import { applyFormula, capacity, dayIndex, SEASONS, useFarmData } from './data/farmdata'
@@ -12,7 +12,6 @@ import type { Season } from './data/save'
 import { BRAND100, BRAND160, Body, Card, Divider, Head, I, Loading, NA, Slot, StageNote, card, n } from './myfarm'
 import { EmptyState } from './ui'
 
-type S = JSX.CSSProperties
 export const goWiki = (sub?: string) => { location.hash = `#/1${sub ? '/' + sub : ''}` }
 const goBack = () => (history.length > 1 ? history.back() : goWiki())
 const GREEN = '#3F5510'
@@ -364,20 +363,28 @@ const MAP_FILE = 'img_map_world.png'
 
 function FishMap({ value, onChange, counts }: { value: string | null; onChange: (k: string | null) => void; counts: Record<string, number> }) {
   const [ok, setOk] = useState(true)
+  const H = 372, W = Math.round(H * 400 / 244)          // รูปแผนที่ 400×244 ขยายให้สูงเท่าบอร์ด แล้วเลื่อนซ้ายขวาได้
   const placed = SPOTS.filter((s) => s.x != null && s.y != null)
+  const scroller = (el: HTMLDivElement | null) => { if (el && !el.dataset.init) { el.dataset.init = '1'; requestAnimationFrame(() => { el.scrollLeft = (W - el.clientWidth) / 2 }) } }
   return (
-    <div style={{ position: 'relative', flex: 'none', ...(ok ? { aspectRatio: '400 / 244' } : { height: 372 }), borderRadius: 16, boxSizing: 'border-box', overflow: 'hidden', ...(ok ? { background: '#DCE7C8' } : { border: '2px dashed #CDBEA6', background: '#F6F0E4' }) }}>
-      {ok && <img src={`${import.meta.env.BASE_URL}img/${MAP_FILE}`} alt="แผนที่ Stardew Valley" onError={() => setOk(false)} style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'fill', imageRendering: 'pixelated' }} />}
-      {(!ok || placed.length === 0) && <span style={{ position: 'absolute', left: 12, bottom: 6, fontSize: 11, color: '#6B6157' }}>{ok ? 'ยังไม่มีตำแหน่งหมุด · เลือกสถานที่จากป้ายด้านล่าง' : 'ยังไม่มีรูปแผนที่ · เลือกสถานที่จากป้ายด้านล่าง'}</span>}
-      {ok && placed.map((s) => {
-        const on = value === s.key
-        return (
-          <button onClick={() => onChange(on ? null : s.key)} style={{ position: 'absolute', left: `${s.x! * 100}%`, top: `${s.y! * 100}%`, transform: 'translate(-50%,-50%)', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 3, padding: 0, border: 0, background: 'none' }}>
-            <span aria-hidden="true" style={{ width: on ? 30 : 24, height: on ? 30 : 24, borderRadius: '50%', boxSizing: 'border-box', display: 'flex', alignItems: 'center', justifyContent: 'center', ...(on ? { background: BRAND160, boxShadow: '0 3px 8px rgba(247,164,65,.35)' } : { background: '#FFFFFF', boxShadow: '0 2px 6px rgba(90,60,20,.2)' }) }}>{PIN(on ? '#26201A' : '#A86E0C', 14)}</span>
-            <span style={{ fontSize: 11, fontWeight: on ? 700 : 600, lineHeight: 1, padding: '3px 6px', borderRadius: 6, background: 'rgba(255,255,255,.92)', whiteSpace: 'nowrap', color: '#26201A' }}>{s.th}{counts[s.key] ? ` ${counts[s.key]}` : ''}</span>
-          </button>
-        )
-      })}
+    <div style={{ position: 'relative', flex: 'none', height: H, borderRadius: 16, boxSizing: 'border-box', overflow: 'hidden', ...(ok ? { background: '#DCE7C8' } : { border: '2px dashed #CDBEA6', background: '#F6F0E4' }) }}>
+      {ok && (
+        <div ref={scroller} style={{ position: 'absolute', inset: 0, overflowX: 'auto', overflowY: 'hidden', WebkitOverflowScrolling: 'touch' }}>
+          <div style={{ position: 'relative', width: W, height: H }}>
+            <img src={`${import.meta.env.BASE_URL}img/${MAP_FILE}`} alt="แผนที่ Stardew Valley" onError={() => setOk(false)} width={W} height={H} style={{ display: 'block', imageRendering: 'pixelated' }} />
+            {placed.map((s) => {
+              const on = value === s.key
+              return (
+                <button onClick={() => onChange(on ? null : s.key)} style={{ position: 'absolute', left: `${s.x! * 100}%`, top: `${s.y! * 100}%`, transform: 'translate(-50%,-50%)', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 3, padding: 0, border: 0, background: 'none' }}>
+                  <span aria-hidden="true" style={{ width: on ? 30 : 24, height: on ? 30 : 24, borderRadius: '50%', boxSizing: 'border-box', display: 'flex', alignItems: 'center', justifyContent: 'center', ...(on ? { background: BRAND160, boxShadow: '0 3px 8px rgba(247,164,65,.35)' } : { background: '#FFFFFF', boxShadow: '0 2px 6px rgba(90,60,20,.2)' }) }}>{PIN(on ? '#26201A' : '#A86E0C', 14)}</span>
+                  <span style={{ fontSize: 11, fontWeight: on ? 700 : 600, lineHeight: 1, padding: '3px 6px', borderRadius: 6, background: 'rgba(255,255,255,.92)', whiteSpace: 'nowrap', color: '#26201A' }}>{s.th}{counts[s.key] ? ` ${counts[s.key]}` : ''}</span>
+                </button>
+              )
+            })}
+          </div>
+        </div>
+      )}
+      <span style={{ position: 'absolute', left: 12, bottom: 6, fontSize: 11, color: ok ? '#FFFFFF' : '#6B6157', textShadow: ok ? '0 1px 2px rgba(0,0,0,.6)' : 'none', pointerEvents: 'none' }}>{ok ? 'แผนที่จากเกม · เลื่อนซ้ายขวาได้ · แตะหมุดเพื่อเลือก' : 'ยังไม่มีรูปแผนที่ · เลือกสถานที่จากป้ายด้านล่าง'}</span>
       <button onClick={() => onChange(null)} style={{ position: 'absolute', right: 8, top: 8, height: 36, padding: '0 12px', display: 'flex', alignItems: 'center', gap: 5, border: 0, borderRadius: 10, background: '#FFFFFF', boxShadow: '0 2px 10px rgba(90,60,20,.08)', color: '#26201A', fontSize: 12.5, fontWeight: 700 }}>ทุกสถานที่</button>
     </div>
   )
@@ -520,6 +527,7 @@ export function WikiBuilding({ id }: { id: string }) {
   const ownedCap = owned?.reduce<number | null>((a, l) => { const c = capacity(fd, kind!, l); return a == null || c == null ? null : a + c }, 0)
   const builtCount = kind ? null : s.buildings[id] ?? 0
   const animals = kind ? cd.animals.filter((a) => a.building.toLowerCase() === kind && a.building_level <= (level ?? 0)) : []
+  const ranked = kind ? [...cd.animals.filter((a) => a.building.toLowerCase() === kind)].sort((x, y) => (y.produce_price ?? 0) / (y.produce_days ?? 1) - (x.produce_price ?? 0) / (x.produce_days ?? 1)) : []
   const prev = data.b.upgrade_from
   return (
     <Body bottom={28}>
@@ -530,22 +538,21 @@ export function WikiBuilding({ id }: { id: string }) {
           <Slot size={40} r={10} />
           <span style={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
             <span style={{ fontSize: 15, fontWeight: 700, lineHeight: 1.3 }}>ในฟาร์มตอนนี้</span>
-            <span style={{ fontSize: 13, color: '#6B6157', lineHeight: 1.35 }}>{kind ? (owned?.length ? `${['Coop', 'Big', 'Deluxe'][0] && (kind === 'coop' ? ['Coop', 'Big Coop', 'Deluxe Coop'] : ['Barn', 'Big Barn', 'Deluxe Barn'])[ownedTop - 1]} × ${owned.length} · เลี้ยงได้ ${ownedCap ?? '—'} ตัว` : 'ยังไม่มี') : builtCount ? `สร้างแล้ว ${builtCount} หลัง` : 'ยังไม่มี'}</span>
+            <span style={{ fontSize: 13, color: '#6B6157', lineHeight: 1.35 }}>{kind ? (owned?.length ? `${(kind === 'coop' ? ['Coop', 'Big Coop', 'Deluxe Coop'] : ['Barn', 'Big Barn', 'Deluxe Barn'])[ownedTop - 1]}${owned.length > 1 ? ` × ${owned.length}` : ''} · เลี้ยงได้ ${ownedCap ?? '—'} ตัว` : 'ยังไม่มี') : builtCount ? `สร้างแล้ว ${builtCount} หลัง` : 'ยังไม่มี'}</span>
           </span>
           <button onClick={() => { location.hash = kind ? '#/2/animals' : '#/2/buildings' }} style={{ flex: 'none', height: 44, padding: '0 8px', border: 0, background: 'none', color: '#A86E0C', fontSize: 14, fontWeight: 700 }}>ดูใน My Farm</button>
         </div>
-        {kind && <>
-          <Divider />
+      </Card>
+        {kind && <Card>
           <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
             <Slot size={40} r={10} />
             <span style={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
               <span style={{ fontSize: 15, fontWeight: 700, lineHeight: 1.3 }}>แนะนำเลี้ยงใน {kind === 'coop' ? 'Coop' : 'Barn'}</span>
-              <span style={{ fontSize: 13, color: '#6B6157', lineHeight: 1.35 }}>{animals.length ? animals.slice(0, 3).map((a, i) => `${i + 1} ${a.name_en}`).join(' · ') : NA}</span>
+              <span style={{ fontSize: 13, color: '#6B6157', lineHeight: 1.35 }}>{ranked.length ? ranked.slice(0, 3).map((a, i) => `${i + 1} ${a.name_en}`).join(' · ') : NA}</span>
             </span>
             <button onClick={() => { location.hash = '#/3/animals' }} style={{ flex: 'none', height: 44, padding: '0 8px', border: 0, background: 'none', color: '#A86E0C', fontSize: 14, fontWeight: 700 }}>ดูอันดับ</button>
           </div>
-        </>}
-      </Card>
+        </Card>}
       <Head title="ค่าสร้าง" note="วัตถุดิบ + เงิน" />
       <Card gap={12}>
         {mats.map((m) => <ItemLine img={file(m.img)} en={m.name_en} th={m.name_th} onClick={() => goWiki('item/' + m.id)} right={<span style={{ flex: 'none', fontSize: 15, fontWeight: 800 }}>×{n(m.qty)}</span>} />)}
@@ -566,22 +573,23 @@ export function WikiBuilding({ id }: { id: string }) {
       </Card>
       {next.length > 0 && <>
         <Head title="อัปเกรดต่อไป" />
-        <Card gap={12}>
-          {next.map((x) => (
+        {next.map((x) => (
+          <Card>
             <button onClick={() => goWiki('building/' + x.id)} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: 0, border: 0, background: 'none', color: '#26201A', textAlign: 'left' }}>
               <Slot size={40} r={10} file={file(x.img)} />
-              <span style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', gap: 2 }}>
-                <span style={{ fontSize: 15, fontWeight: 700 }}>{x.name_en}</span>
-                <span style={{ fontSize: 12.5, color: '#6B6157', lineHeight: 1.4 }}>{[x.mats, x.cost_gold == null ? null : `${n(x.cost_gold)}g`].filter(Boolean).join(' · ')}</span>
+              <span style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', gap: 1 }}>
+                <span style={{ fontSize: 15, fontWeight: 700, lineHeight: 1.3 }}>{x.name_en}</span>
+                <span style={{ fontSize: 13, lineHeight: 1.3, color: '#6B6157' }}>{x.name_th ?? 'ชื่อไทย'}</span>
               </span>
-              {I.chev()}
+              <Chip bg="#ECE6DC" icon={CUBE}>ต้องมี {b.name_en}</Chip>
             </button>
-          ))}
-        </Card>
+            <span style={{ fontSize: 13, color: '#6B6157' }}>{[x.mats, x.cost_gold == null ? null : `${n(x.cost_gold)}g`].filter(Boolean).join(' · ')}</span>
+          </Card>
+        ))}
       </>}
       {animals.length > 0 && <>
         <Head title="สัตว์ที่อยู่ได้" />
-        <Card gap={12}>{animals.map((a) => <ItemLine img={a.img} en={a.name_en} th={a.name_th} right={<span style={{ fontSize: 13, color: '#6B6157' }}>{n(a.price)}g</span>} />)}</Card>
+        <Card gap={12}>{animals.map((a) => <ItemLine img={a.img} en={a.name_en} th={a.name_th} right={null} />)}</Card>
       </>}
     </Body>
   )
@@ -607,7 +615,7 @@ export function WikiNpc({ id }: { id: string }) {
   const s = useSave()
   const data = useQ(() => npcFull(id), [id])
   const [taste, setTaste] = useState('love')
-  const [day, setDay] = useState<'normal' | 'rain'>('normal')
+  const [day, setDay] = useState<'normal' | 'rain' | 'other'>('normal')
   useEffect(() => { if (data?.n) pushRecent({ href: `#/1/npc/${id}`, name_en: data.n.name_en, name_th: data.n.name_th, img: file(data.n.img), sub: `NPC${data.n.birthday_season ? ` · วันเกิด ${data.n.birthday_season} ${data.n.birthday_day}` : ''}` }) }, [data])
   if (!data || !s) return <Loading />
   const { n: npc, gifts, sched } = data
@@ -621,7 +629,13 @@ export function WikiNpc({ id }: { id: string }) {
   const rows = sched?.filter((r) => r.day_kind === day && (r.season == null || r.season === s.date.season)) ?? []
   const shown = rows.length ? rows : sched?.filter((r) => r.day_kind === day && r.season == null) ?? []
   const list = gifts.filter((g) => g.taste === taste)
-  const tab = (on: boolean): S => ({ flex: 1, height: 40, border: 0, borderRadius: 12, fontSize: 13.5, fontWeight: on ? 700 : 600, color: '#26201A', ...(on ? { background: BRAND160 } : { background: '#FFFFFF', boxShadow: 'inset 0 0 0 1.5px #E8D9B5' }) })
+  const Seg = ({ items, value, onPick }: { items: [string, string][]; value: string; onPick: (k: string) => void }) => (
+    <div role="tablist" style={{ display: 'flex', gap: 4, padding: 4, borderRadius: 26, background: '#F4F1EB' }}>
+      {items.map(([k, l]) => { const on = k === value; return (
+        <button role="tab" aria-selected={on} onClick={() => onPick(k)} style={{ flex: 1, height: 44, padding: '0 4px', border: 0, borderRadius: 22, fontSize: 13, whiteSpace: 'nowrap', ...(on ? { background: BRAND100, boxShadow: '0 2px 0 #D9961E', color: '#26201A', fontWeight: 700 } : { background: 'transparent', color: '#6B6157', fontWeight: 600 }) }}>{l}</button>
+      ) })}
+    </div>
+  )
   return (
     <Body bottom={28}>
       <Back />
@@ -632,37 +646,38 @@ export function WikiNpc({ id }: { id: string }) {
           <Stat label="วันเกิด" value={npc.birthday_season ? `${npc.birthday_season} ${npc.birthday_day}` : NA} sub={until == null ? undefined : until === 0 ? 'วันนี้' : `อีก ${until} วัน`} />
           <Stat label="แต่งงาน" value={npc.marriageable ? 'ได้' : 'ไม่ได้'} sub={npc.marriageable ? 'ต้องมี Bouquet' : undefined} />
         </div>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-          <span style={{ fontSize: 13, color: '#6B6157' }}>บ้านอยู่ที่</span>
-          {npc.home ? <Chip bg="#E6E0FB" icon={PIN()}>{npc.home}</Chip> : <span style={{ fontSize: 13, color: '#6B6157' }}>{NA}</span>}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 6, boxSizing: 'border-box', padding: 12, borderRadius: 16, background: '#FAF6EE' }}>
+          <span style={{ fontSize: 12, color: '#6B6157' }}>บ้านอยู่ที่</span>
+          <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>{npc.home ? <Chip bg="#E6E0FB" icon={PIN()}>{npc.home}</Chip> : <span style={{ fontSize: 13, color: '#6B6157' }}>{NA}</span>}</div>
         </div>
       </Card>
       <Head title="ตารางประจำวัน" note="อยู่ที่ไหน ทำอะไร" />
       <Card>
-        <div style={{ display: 'flex', gap: 8 }}>
-          <button onClick={() => setDay('normal')} style={tab(day === 'normal')}>วันปกติ</button>
-          <button onClick={() => setDay('rain')} style={tab(day === 'rain')}>วันฝนตก</button>
-        </div>
-        {!sched?.length ? <span style={{ fontSize: 13, color: '#6B6157' }}>ยังไม่มีข้อมูลตารางของ {npc.name_en}</span> : !shown.length ? <span style={{ fontSize: 13, color: '#6B6157' }}>ไม่มีตารางแยกสำหรับวันนี้</span> : (
+        <Seg items={[['normal', 'วันปกติ'], ['rain', 'วันฝนตก'], ['other', 'วันหยุด']]} value={day} onPick={(k) => setDay(k as typeof day)} />
+        {!sched?.length ? <span style={{ fontSize: 13, color: '#6B6157' }}>ยังไม่มีข้อมูลตารางของ {npc.name_en}</span> : !shown.length ? <span style={{ fontSize: 13, color: '#6B6157' }}>{day === 'other' ? 'ยังไม่มีข้อมูลตารางวันหยุด' : 'ไม่มีตารางแยกสำหรับวันนี้'}</span> : (
           <>
-            <span style={{ fontSize: 12, color: '#6B6157' }}>ฤดู {s.date.season} · ตารางจริงเปลี่ยนตามวันและเหตุการณ์</span>
-            {shown.map((r) => (
-              <div style={{ display: 'flex', alignItems: 'flex-start', gap: 10 }}>
-                <span style={{ flex: 'none', width: 48, fontSize: 14, fontWeight: 800 }}>{hhmm(r.time)}</span>
-                <span style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', gap: 4 }}>
-                  <span style={{ fontSize: 13.5, lineHeight: 1.4 }}>{r.location}</span>
-                  {r.note && <span style={{ fontSize: 12, color: '#6B6157', lineHeight: 1.4 }}>{r.note}</span>}
-                </span>
-              </div>
-            ))}
+            <span style={{ fontSize: 12, lineHeight: 1.45, color: '#6B6157' }}>ฤดู {s.date.season} · ตารางจริงเปลี่ยนตามฤดู วัน และระดับหัวใจ</span>
+            <div style={{ display: 'flex', flexDirection: 'column', paddingTop: 4 }}>
+              {shown.map((r, i) => (
+                <div style={{ display: 'flex', gap: 10, alignItems: 'flex-start', paddingBottom: 14, position: 'relative' }}>
+                  <span style={{ flex: 'none', width: 44, fontSize: 14, fontWeight: 800, lineHeight: 1.5 }}>{hhmm(r.time)}</span>
+                  <span style={{ flex: 'none', position: 'relative', width: 12, alignSelf: 'stretch' }}>
+                    <span aria-hidden="true" style={{ position: 'absolute', left: 0, top: 7, width: 12, height: 12, borderRadius: '50%', background: BRAND160 }} />
+                    {i < shown.length - 1 && <span aria-hidden="true" style={{ position: 'absolute', left: 5, top: 21, bottom: -14, width: 2, background: '#E8D9B5' }} />}
+                  </span>
+                  <span style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', gap: 4 }}>
+                    <span style={{ fontSize: 15, fontWeight: 700, lineHeight: 1.4 }}>{r.location}</span>
+                    {r.note && <span style={{ fontSize: 13, color: '#6B6157', lineHeight: 1.35 }}>{r.note}</span>}
+                  </span>
+                </div>
+              ))}
+            </div>
           </>
         )}
       </Card>
       <Head title="ของขวัญ" note="แตะของเพื่อดูรายละเอียด" />
       <Card gap={12}>
-        <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
-          {TASTES.map(([k, l]) => <button onClick={() => setTaste(k)} style={{ ...tab(taste === k), flex: 'none', padding: '0 12px', height: 36 }}>{l} {gifts.filter((g) => g.taste === k).length}</button>)}
-        </div>
+        <Seg items={TASTES.filter(([k]) => k !== 'hate')} value={taste} onPick={setTaste} />
         {list.length === 0 ? <span style={{ fontSize: 13, color: '#6B6157' }}>{NA}</span> : list.map((g) => <ItemLine img={file(g.img)} en={g.name_en} th={g.name_th} onClick={() => goWiki('item/' + g.id)} right={I.chev()} />)}
       </Card>
     </Body>
