@@ -136,8 +136,8 @@ function Legend({ split }: { split: Plot['split'] }) {
 export function Overlay({ children }: { children: ComponentChildren }) {
   return <div style={{ position: 'fixed', inset: 0, zIndex: 40, display: 'flex', alignItems: 'center', padding: 16, background: 'rgba(38,32,26,.35)' }}><div style={{ flex: 1 }}>{children}</div></div>
 }
-export function StageNote({ onClose, what }: { onClose: () => void; what: string }) {
-  return <Overlay><ConfirmDelete title={`${what} ทำในขั้น 3`} body="หน้านี้อยู่ในขั้นถัดไป ตอนนี้ยังเปิดไม่ได้" onCancel={onClose} onConfirm={onClose} confirmLabel="ตกลง" /></Overlay>
+export function StageNote({ onClose, what, stage = 3 }: { onClose: () => void; what: string; stage?: number }) {
+  return <Overlay><ConfirmDelete title={`${what} ทำในขั้น ${stage}`} body="หน้านี้อยู่ในขั้นถัดไป ตอนนี้ยังเปิดไม่ได้" onCancel={onClose} onConfirm={onClose} confirmLabel="ตกลง" /></Overlay>
 }
 
 const plotSub = (d: FarmData, p: Plot) => {
