@@ -4,11 +4,12 @@ import type { ComponentChildren, JSX } from 'preact'
 import { useState } from 'preact/hooks'
 import { updateSave, useSave } from './data/useSave'
 import {
-  HOUSE_NAMES, SPRINKLER_ITEM, applyFormula, capacity, dayIndex, fmtDate, fromIndex, harvests, reach, useFarmData, SEASONS,
+  HOUSE_KEYS, HOUSE_NAMES, SPRINKLER_ITEM, applyFormula, capacity, dayIndex, fmtDate, fromIndex, harvests, reach, useFarmData, SEASONS,
   type FarmData,
 } from './data/farmdata'
 import type { HouseLevel, Plot, SaveData, Season, SprinklerKind } from './data/save'
 import { ConfirmDelete, EmptyState, NumInput, Skeleton } from './ui'
+import { icon } from './data/icons'
 
 type S = JSX.CSSProperties
 export const BRAND160 = 'linear-gradient(160deg,#FFD25E 0%,#FDB927 55%,#F7A441 100%)'
@@ -32,7 +33,8 @@ export const I = {
 }
 
 /** ช่องไอคอน: ใช้รูปจากฐานข้อมูลถ้ามี ไม่มีก็เป็นกรอบเส้นประตามบอร์ด */
-export function Slot({ size, r, file, on }: { size: number; r: number; file?: string; on?: boolean }) {
+export function Slot({ size, r, file, on, ic }: { size: number; r: number; file?: string; on?: boolean; ic?: string }) {
+  file ??= icon(ic)
   // รูปจากเกมอยู่ในกรอบขนาดเท่าช่องเดิม และย่อรูปเหลือราว 70% ของกรอบ
   if (file) {
     const img = Math.round(size * 0.7)
@@ -238,7 +240,7 @@ export function MyFarm() {
       <FarmTitle s={s} onSave={() => setNote('สลับเซฟ')} />
       <Summary title="ช่องปลูกทั้งฟาร์ม" plots={plots} labels={[['flower', 'ไม้ดอก'], ['once', 'โตครั้งเดียว'], ['regrow', 'เก็บซ้ำ']]} />
       <button onClick={() => { location.hash = '#/3/seeds' }} style={{ width: '100%', boxSizing: 'border-box', padding: 12, display: 'flex', alignItems: 'center', gap: 12, border: 0, borderRadius: 20, background: '#FFFFFF', boxShadow: 'inset 0 0 0 2px #FDB927', color: '#26201A', textAlign: 'left' }}>
-        <Slot size={44} r={12} />
+        <Slot size={44} r={12} ic="img_mixed_seeds" />
         <span style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', gap: 1 }}>
           <span style={{ fontSize: 16, fontWeight: 800, lineHeight: 1.3 }}>วางแผนซื้อเมล็ด · {s.date.season}</span>
           <span style={{ fontSize: 13, color: '#6B6157', lineHeight: 1.35 }}>จากช่อง {n(t.tiles)} ช่อง ต้องซื้อกี่ถุง เท่าไหร่</span>
@@ -293,7 +295,7 @@ export function MyFarm() {
             <>
               {i > 0 && <Divider />}
               <button onClick={() => go('animals')} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: 0, border: 0, background: 'none', color: '#26201A', textAlign: 'left' }}>
-                <Slot size={44} r={12} />
+                <Slot size={44} r={12} ic={`img_building_${HOUSE_KEYS[k][(s.animal_housing[k].length ? Math.max(...s.animal_housing[k]) : 1) - 1]}`} />
                 <span style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', gap: 1 }}>
                   <span style={{ fontSize: 16, fontWeight: 800, lineHeight: 1.3 }}>{h.title}</span>
                   <span style={{ fontSize: 13, color: '#6B6157', lineHeight: 1.35 }}>{h.sub}</span>
@@ -306,8 +308,8 @@ export function MyFarm() {
       </Card>
       <Head title="อื่น ๆ" note="ระดับ·อาชีพใช้ในการคำนวณ" />
       <div style={{ display: 'flex', gap: 8 }}>
-        <Pick label="อาคาร" onClick={() => go('buildings')} />
-        <Pick label="ระดับ·อาชีพ" onClick={() => go('skills')} />
+        <Pick label="อาคาร" onClick={() => go('buildings')} file={icon('img_building_barn')} />
+        <Pick label="ระดับ·อาชีพ" onClick={() => go('skills')} file={icon('img_skill_farming')} />
       </div>
       {note && <StageNote what={note} onClose={() => setNote(null)} />}
     </Body>
@@ -317,9 +319,9 @@ export function MyFarm() {
 function Locations({ s, here }: { s: SaveData; here: 'farm' | 'island' }) {
   return (
     <div style={{ display: 'flex', gap: 8 }}>
-      <Pick label="ฟาร์มหลัก" on={here === 'farm'} onClick={() => go()} />
+      <Pick label="ฟาร์มหลัก" on={here === 'farm'} onClick={() => go()} file={icon('img_building_cabin')} />
       {s.ginger_island
-        ? <Pick label="Ginger Island" on={here === 'island'} onClick={() => go('island')} />
+        ? <Pick label="Ginger Island" on={here === 'island'} onClick={() => go('island')} file={icon('img_ginger_island')} />
         : (
           <button onClick={() => { updateSave((x) => ({ ...x, ginger_island: true })); go('island') }} style={{ flex: 1, minWidth: 0, height: 84, boxSizing: 'border-box', padding: '8px 4px 6px', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 5, border: 0, borderRadius: 14, background: 'transparent', boxShadow: 'inset 0 0 0 2px #CDBEA6', color: '#A86E0C', fontWeight: 700 }}>
             {I.plus(24)}<span style={{ fontSize: 12.5, lineHeight: 1.2, whiteSpace: 'nowrap' }}>เพิ่ม Ginger Island</span>
@@ -499,7 +501,7 @@ export function AnimalHousing() {
         return (
           <Card>
             <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-              <Slot size={44} r={12} />
+              <Slot size={44} r={12} ic={`img_building_${HOUSE_KEYS[k][lvl - 1]}`} />
               <span style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', gap: 1 }}>
                 <span style={{ fontSize: 17, fontWeight: 800, lineHeight: 1.3 }}>{name} หลังที่ {i + 1}</span>
                 <span style={{ fontSize: 13, color: '#6B6157' }}>{c == null ? NA : `เลี้ยงได้ ${c} ตัว`}</span>
@@ -510,7 +512,7 @@ export function AnimalHousing() {
             <div style={{ display: 'flex', gap: 8 }}>
               {HOUSE_NAMES[k].map((hn, j) => {
                 const cc = capacity(d, k, j + 1)
-                return <Pick label={hn} sub={cc == null ? NA : `${cc} ตัว`} h={78} icon={26} iconR={7} on={lvl === j + 1} onClick={() => setL(k, (ls) => ls.map((x, m) => (m === i ? ((j + 1) as HouseLevel) : x)))} />
+                return <Pick label={hn} file={icon(`img_building_${HOUSE_KEYS[k][j]}`)} sub={cc == null ? NA : `${cc} ตัว`} h={78} icon={26} iconR={7} on={lvl === j + 1} onClick={() => setL(k, (ls) => ls.map((x, m) => (m === i ? ((j + 1) as HouseLevel) : x)))} />
               })}
             </div>
           </Card>
@@ -706,7 +708,7 @@ export function Buildings() {
                 const cost = [b.cost_gold == null ? null : `${n(b.cost_gold)}g`, ...b.materials.map((m) => `${m.name_en} ${n(m.qty)}`)].filter(Boolean).join(' · ')
                 return (
                   <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                    <Slot size={40} r={10} />
+                    <Slot size={40} r={10} ic={`img_building_${b.id}`} />
                     <span style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', gap: 1 }}>
                       <span style={{ fontSize: 15, fontWeight: 700, lineHeight: 1.3, color: c ? '#26201A' : '#6B6157' }}>{b.name_en}</span>
                       <span style={{ fontSize: 12.5, color: '#6B6157', lineHeight: 1.35 }}>{c ? (b.name_th ?? 'ชื่อไทย') : `ยังไม่มี · ${cost || NA}`}</span>

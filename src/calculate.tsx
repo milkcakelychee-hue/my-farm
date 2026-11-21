@@ -8,6 +8,7 @@ import {
   type CalcData, type FreshRow, type Group, type Profession,
 } from './data/calc'
 import { useFarmData } from './data/farmdata'
+import { icon } from './data/icons'
 import type { SaveData, SkillName } from './data/save'
 import { BRAND100, BRAND160, Body, COL, Card, Count, Divider, Head, I, Info, Loading, NA, Slot, SubHeader, card, n } from './myfarm'
 import { ConfirmDelete, Skeleton } from './ui'
@@ -128,14 +129,14 @@ export function Calculate() {
       </div>
       <Head title="วางแผนฤดูนี้" note="เรียงตามลำดับที่ควรทำ" />
       <CardButton slot={top?.crop.img} title="แนะนำปลูก" sub="ปลูกสด · แปรรูป · เทียบปุ๋ย" label={top ? `อันดับ 1 ${GROUPS.find((g) => g[0] === top.group)![1]}` : 'ยังไม่มีพืชที่ปลูกทัน'} value={top ? `${top.crop.name_en} ${sg(bestValue(top))}` : '—'} onClick={() => goCalc('fresh')} />
-      <CardButton title="แผนซื้อเมล็ด" sub="ซื้ออะไร กี่ถุง เท่าไหร่" label="เงินที่ต้องเตรียม" value={`${n(cost)}g`} onClick={() => goCalc('seeds')} />
+      <CardButton slot={icon('img_mixed_seeds')} title="แผนซื้อเมล็ด" sub="ซื้ออะไร กี่ถุง เท่าไหร่" label="เงินที่ต้องเตรียม" value={`${n(cost)}g`} onClick={() => goCalc('seeds')} />
       <Head title="ฟาร์มส่วนอื่น" />
       <CardButton slot={animalsTop?.r.a.img} title="แนะนำเลี้ยงสัตว์" sub="ตามคอกที่มี · ขายเลย vs แปรรูป" label={animalsTop ? `อันดับ 1 ${animalsTop.k}` : 'ยังไม่มีคอกสัตว์'} value={animalsTop ? `${animalsTop.r.a.name_en} +${n(Math.max(animalsTop.r.proc?.perDay ?? 0, animalsTop.r.sell ?? 0))}g/วัน` : '—'} onClick={() => goCalc('animals')} />
       <CardButton slot={fd.img.ancient_fruit} title="เตรียม Keg เรือนกระจก" sub={`${anc?.name_en ?? 'Ancient Fruit'} · ต้องมี Keg ${need ?? '—'}`} label="ต้องสร้างเพิ่ม" value={short == null ? NA : `${short} ตัว`} color={short ? '#A63D2A' : GREEN} onClick={() => goFarm('greenhouse')} />
       <Head title="ค่าที่ใช้คำนวณ" />
       <Card gap={8}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-          <Slot size={44} r={12} />
+          <Slot size={44} r={12} ic="img_skill_farming" />
           <span style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', gap: 1 }}>
             <span style={{ fontSize: 16, fontWeight: 800, lineHeight: 1.3 }}>ระดับ · อาชีพ</span>
             <span style={{ fontSize: 13, lineHeight: 1.35, color: b.any ? GREEN : '#A63D2A' }}>{b.set ? `Farming ${s.skills.levels.Farming}${profNames.length ? ' · ' + profNames.join(', ') : ''}` : 'ยังไม่ได้ตั้ง · ตัวเลขยังไม่รวมโบนัสอาชีพ'}</span>
@@ -154,7 +155,7 @@ function ModeTabs({ mode }: { mode: 'fresh' | 'process' }) {
     const on = mode === k
     return (
       <button aria-pressed={on} onClick={() => goCalc(k)} style={{ flex: 1, minWidth: 0, height: 64, boxSizing: 'border-box', padding: '6px 10px', display: 'flex', alignItems: 'center', gap: 10, border: 0, borderRadius: 14, color: '#26201A', textAlign: 'left', ...(on ? { background: BRAND160, boxShadow: '0 3px 8px rgba(247,164,65,.3)', fontWeight: 700 } : { background: '#FFFFFF', boxShadow: 'inset 0 0 0 1.5px #E8D9B5', fontWeight: 600 }) }}>
-        <Slot size={30} r={8} on={on} />
+        <Slot size={30} r={8} on={on} ic={k === 'fresh' ? 'img_pumpkin' : 'img_keg'} />
         <span style={{ display: 'flex', flexDirection: 'column', gap: 1 }}><span style={{ fontSize: 15 }}>{title}</span><span style={{ fontSize: 11.5, fontWeight: 500, color: on ? '#26201A' : '#6B6157' }}>{sub}</span></span>
       </button>
     )
@@ -396,7 +397,7 @@ export function AnimalAdvisor() {
     return (
       <Card gap={12}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-          <Slot size={32} r={8} /><span style={{ flex: 1, fontSize: 16, fontWeight: 800 }}>{kind}</span><span style={{ fontSize: 12.5, color: '#6B6157' }}>เลี้ยงได้ {cap ?? '—'} ตัว</span>
+          <Slot size={32} r={8} ic={`img_building_${kind.toLowerCase()}`} /><span style={{ flex: 1, fontSize: 16, fontWeight: 800 }}>{kind}</span><span style={{ fontSize: 12.5, color: '#6B6157' }}>เลี้ยงได้ {cap ?? '—'} ตัว</span>
         </div>
         {!rs.length && <span style={{ fontSize: 13, color: '#6B6157' }}>ยังไม่มี {kind} · เพิ่มได้ที่ My Farm</span>}
         {!!rs.length && cap != null && <div style={{ padding: '8px 10px', borderRadius: 12, background: '#F4F1EB', fontSize: 12.5, lineHeight: 1.45, color: GREEN }}>เต็มคอกด้วยอันดับ 1 ≈ <b>+{n(best * cap)}g/วัน</b></div>}
@@ -463,7 +464,7 @@ export function Skills() {
     const on = chosen.has(p.id)
     return (
       <button aria-pressed={on} onClick={() => choose(p)} style={{ flex: 1, minWidth: 0, boxSizing: 'border-box', padding: '10px 8px', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4, border: 0, borderRadius: 14, color: '#26201A', textAlign: 'center', ...(on ? { background: BRAND160, boxShadow: '0 3px 8px rgba(247,164,65,.3)' } : { background: '#FFFFFF', boxShadow: 'inset 0 0 0 1.5px #E8D9B5' }) }}>
-        <Slot size={30} r={8} on={on} />
+        <Slot size={30} r={8} on={on} ic={`img_profession_${p.id}`} />
         <span style={{ fontSize: 15, fontWeight: 800, lineHeight: 1.3 }}>{p.name_en}</span>
         <span style={{ fontSize: 12, lineHeight: 1.35, color: on ? '#26201A' : '#6B6157' }}>{profShort(p) ?? NA}</span>
       </button>
@@ -519,7 +520,7 @@ export function Skills() {
       <Head title="ที่มีผลกับกำไรมากสุด" />
       <Card gap={12}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-          <Slot size={44} r={12} />
+          <Slot size={44} r={12} ic="img_skill_farming" />
           <span style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', gap: 1 }}><span style={{ fontSize: 18, fontWeight: 800, lineHeight: 1.3 }}>Farming</span><span style={{ fontSize: 13, color: '#6B6157', lineHeight: 1.35 }}>ปลูกพืช · เลี้ยงสัตว์ · แปรรูป</span></span>
         </div>
         {d.professions.length ? tree('Farming') : <span style={{ fontSize: 13, color: '#6B6157' }}>{NA}</span>}
@@ -530,7 +531,7 @@ export function Skills() {
           <>
             {i > 0 && <Divider />}
             <button onClick={() => setOpen(open === k ? null : k)} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: 0, border: 0, background: 'none', color: '#26201A', textAlign: 'left' }}>
-              <Slot size={40} r={10} />
+              <Slot size={40} r={10} ic={`img_skill_${k.toLowerCase()}`} />
               <span style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', gap: 1 }}>
                 <span style={{ fontSize: 15, fontWeight: 700, lineHeight: 1.3 }}>{k}</span>
                 <span style={{ fontSize: 13, color: '#6B6157', lineHeight: 1.35 }}>{profLabel(k) || 'ยังไม่ได้เลือกอาชีพ'}</span>

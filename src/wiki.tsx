@@ -121,13 +121,13 @@ function GridTile({ on, onClick, icon, label, value, valueColor }: { on: boolean
   )
 }
 /** ราคาตามคุณภาพ (ตัวคูณจาก game_constant) */
-function QualityPrices({ price, c }: { price: number | null; c: Record<string, number> }) {
+function QualityPrices({ price, c, img }: { price: number | null; c: Record<string, number>; img?: string }) {
   const q: [string, number | null][] = [['Normal', 1000], ['Silver', c.quality_price_silver_x1000 ?? null], ['Gold', c.quality_price_gold_x1000 ?? null], ['Iridium', c.quality_price_iridium_x1000 ?? null]]
   return (
     <div style={{ display: 'flex', gap: 8 }}>
       {q.map(([l, m]) => (
         <div style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4, padding: '10px 2px 8px', borderRadius: 14, background: '#FAF6EE' }}>
-          <Slot size={28} r={8} />
+          <Slot size={28} r={8} file={l === 'Normal' ? img : undefined} ic={`img_quality_${l.toLowerCase()}`} />
           <span style={{ fontSize: 12, color: '#6B6157' }}>{l}</span>
           <span style={{ fontSize: 15, fontWeight: 800 }}>{price == null || m == null ? '—' : `${n(Math.floor(price * m / 1000))}g`}</span>
         </div>
@@ -160,6 +160,7 @@ const hhmm = (t: number | null) => (t == null ? '—' : `${String(Math.floor(t /
 const weatherTh = (w: string | null) => (!w ? null : /rain/i.test(w) ? 'ฝนตก' : /sun/i.test(w) ? 'แดดออก' : 'ทุกสภาพอากาศ')
 
 /* ---------- 15 · หน้าหลัก Wiki ---------- */
+const CAT_IC: Record<string, string> = { 'พืชผล': 'img_pumpkin', 'ปลา': 'img_catfish', 'ของป่า': 'img_salmonberry', 'แร่และอัญมณี': 'img_amethyst', 'อาหารและสูตร': 'img_fried_egg', 'เครื่องจักร': 'img_keg', 'อาคาร': 'img_building_barn', 'NPC': 'img_npc_abigail', 'มอนสเตอร์': 'img_slime' }
 const CATS: [string, string | null][] = [['พืชผล', 'crops'], ['ปลา', 'fish'], ['ของป่า', null], ['แร่และอัญมณี', null], ['อาหารและสูตร', null], ['เครื่องจักร', null], ['อาคาร', 'buildings'], ['NPC', 'npcs'], ['มอนสเตอร์', null]]
 export function WikiHome() {
   const s = useSave()
@@ -184,7 +185,7 @@ export function WikiHome() {
       ) : (
         <>
           <button onClick={() => goWiki('crops')} style={{ width: '100%', boxSizing: 'border-box', padding: '10px 12px', display: 'flex', alignItems: 'center', gap: 12, border: 0, borderRadius: 20, background: '#FFFFFF', boxShadow: '0 2px 10px rgba(90,60,20,.08)', color: '#26201A', textAlign: 'left' }}>
-            <Slot size={44} r={12} />
+            <Slot size={44} r={12} ic={`img_season_${season.toLowerCase()}`} />
             <span style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 1 }}><span style={{ fontSize: 16, fontWeight: 700, lineHeight: 1.3 }}>ฤดูตอนนี้ · {season}</span><span style={{ fontSize: 13, color: '#6B6157', lineHeight: 1.35 }}>ดูพืชและปลาที่เหมาะกับฤดูนี้</span></span>
             {I.chev()}
           </button>
@@ -194,7 +195,7 @@ export function WikiHome() {
               <div style={{ display: 'flex', gap: 8 }}>
                 {CATS.slice(i, i + 3).map(([l, k]) => (
                   <button onClick={() => (k ? goWiki(k) : setNote(l))} style={{ flex: 1, minWidth: 0, height: 84, boxSizing: 'border-box', padding: '8px 4px 6px', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 5, border: 0, borderRadius: 14, background: '#FFFFFF', boxShadow: 'inset 0 0 0 1.5px #E8D9B5', color: '#26201A', fontWeight: 600 }}>
-                    <Slot size={32} r={8} /><span style={{ fontSize: 12.5, lineHeight: 1.2, textAlign: 'center', whiteSpace: 'nowrap' }}>{l}</span>
+                    <Slot size={32} r={8} ic={CAT_IC[l]} /><span style={{ fontSize: 12.5, lineHeight: 1.2, textAlign: 'center', whiteSpace: 'nowrap' }}>{l}</span>
                   </button>
                 ))}
               </div>
@@ -219,7 +220,7 @@ function SeasonTabs({ value, onChange, now, compact }: { value: Season; onChange
           const on = s === value
           return (
             <button aria-pressed={on} onClick={() => onChange(s)} style={{ flex: 1, minWidth: 0, height: compact ? 44 : 84, boxSizing: 'border-box', padding: compact ? '0 6px' : '8px 4px 6px', display: 'flex', flexDirection: compact ? 'row' : 'column', alignItems: 'center', justifyContent: 'center', gap: compact ? 6 : 5, border: 0, borderRadius: 14, color: '#26201A', ...(on ? { background: BRAND160, boxShadow: '0 3px 8px rgba(247,164,65,.3)', fontWeight: 700 } : { background: '#FFFFFF', boxShadow: 'inset 0 0 0 1.5px #E8D9B5', fontWeight: 600 }) }}>
-              <Slot size={compact ? 22 : 32} r={compact ? 6 : 8} on={on} /><span style={{ fontSize: 12.5, lineHeight: 1.2, whiteSpace: 'nowrap' }}>{s}</span>
+              <Slot size={compact ? 22 : 32} r={compact ? 6 : 8} on={on} ic={`img_season_${s.toLowerCase()}`} /><span style={{ fontSize: 12.5, lineHeight: 1.2, whiteSpace: 'nowrap' }}>{s}</span>
             </button>
           )
         })}
@@ -297,7 +298,7 @@ export function WikiItem({ id }: { id: string }) {
       {crop && (
         <Card>
           <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-            <Slot size={40} r={10} />
+            <Slot size={40} r={10} ic="img_skill_farming" />
             <span style={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
               <span style={{ fontSize: 15, fontWeight: 700, lineHeight: 1.3 }}>{rank ? `อันดับ ${rank.i + 1} ใน แนะนำปลูก ${s.date.season}` : `ไม่อยู่ในแนะนำปลูก ${s.date.season}`}</span>
               <span style={{ fontSize: 13, color: '#6B6157', lineHeight: 1.35 }}>{rank ? `กลุ่ม${rank.group} · ${rank.v < 0 ? '−' : '+'}${n(Math.abs(rank.v))}g ทั้งแปลง` : 'ปลูกไม่ทันหรือไม่ใช่ฤดูนี้'}</span>
@@ -325,7 +326,7 @@ export function WikiItem({ id }: { id: string }) {
       )}
       <Head title="ราคาขาย" />
       <Card>
-        <QualityPrices price={it.sell_price == null ? null : Math.floor(it.sell_price * (crop ? b.crop : 1))} c={cd.c} />
+        <QualityPrices price={it.sell_price == null ? null : Math.floor(it.sell_price * (crop ? b.crop : 1))} c={cd.c} img={file(it.img)} />
         {prods.length > 0 && <>
           <Divider />
           <span style={{ fontSize: 13, fontWeight: 700 }}>แปรรูป</span>
@@ -474,8 +475,8 @@ function FishDetail({ f, uses, prods, c }: { f: FishRow; uses: Awaited<ReturnTyp
         <SeasonBar on={all ? SEASONS : seasons} />
         <div style={{ display: 'flex', gap: 8 }}>
           {[['แดดออก', w !== 'ฝนตก'], ['ฝนตก', w !== 'แดดออก']].map(([l, on]) => on
-            ? <span style={{ flex: 1, height: 44, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, borderRadius: 12, background: BRAND160, color: '#26201A', fontSize: 14, fontWeight: 700 }}><Slot size={20} r={6} on />{l as string}</span>
-            : <span style={{ flex: 1, height: 44, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, borderRadius: 12, background: '#ECE6DC', color: '#8F8271', fontSize: 14, fontWeight: 600 }}><Slot size={20} r={6} />{l as string}</span>)}
+            ? <span style={{ flex: 1, height: 44, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, borderRadius: 12, background: BRAND160, color: '#26201A', fontSize: 14, fontWeight: 700 }}><Slot size={20} r={6} on ic={l === 'แดดออก' ? 'img_weather_sun' : 'img_weather_rain'} />{l as string}</span>
+            : <span style={{ flex: 1, height: 44, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, borderRadius: 12, background: '#ECE6DC', color: '#8F8271', fontSize: 14, fontWeight: 600 }}><Slot size={20} r={6} ic={l === 'แดดออก' ? 'img_weather_sun' : 'img_weather_rain'} />{l as string}</span>)}
         </div>
         <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline' }}><span style={{ fontSize: 13, fontWeight: 700 }}>ช่วงเวลา</span><span style={{ fontSize: 14, fontWeight: 800 }}>{t0 == null ? NA : `${hhmm(t0)} – ${hhmm(t1)}`}</span></div>
@@ -498,7 +499,7 @@ function FishDetail({ f, uses, prods, c }: { f: FishRow; uses: Awaited<ReturnTyp
       </Card>
       <Head title="ราคาขาย" />
       <Card>
-        <QualityPrices price={f.sell_price} c={c} />
+        <QualityPrices price={f.sell_price} c={c} img={file(f.img)} />
         {prods.length > 0 && <>
           <Divider /><span style={{ fontSize: 13, fontWeight: 700 }}>แปรรูป</span>
           {prods.map((p) => { const v = applyFormula(p.price_formula, f.sell_price); return <ItemLine img={file(p.img)} en={p.name_en} th={p.name_th} right={<span style={{ flex: 'none', fontSize: 14, fontWeight: 700 }}>{v == null ? '—' : `${n(v)}g`}</span>} /> })}
@@ -548,7 +549,7 @@ export function WikiBuilding({ id }: { id: string }) {
       <Hero img={file(b.img)} en={b.name_en} th={b.name_th} chips={<><Chip bg="#FFEBBF" icon={CUBE}>อาคาร</Chip><Chip bg="#E6E0FB" icon={PERSON}>{b.builder}</Chip></>} />
       <Card>
         <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-          <Slot size={40} r={10} />
+          <Slot size={40} r={10} file={file(b.img)} />
           <span style={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
             <span style={{ fontSize: 15, fontWeight: 700, lineHeight: 1.3 }}>ในฟาร์มตอนนี้</span>
             <span style={{ fontSize: 13, color: '#6B6157', lineHeight: 1.35 }}>{kind ? (owned?.length ? `${(kind === 'coop' ? ['Coop', 'Big Coop', 'Deluxe Coop'] : ['Barn', 'Big Barn', 'Deluxe Barn'])[ownedTop - 1]}${owned.length > 1 ? ` × ${owned.length}` : ''} · เลี้ยงได้ ${ownedCap ?? '—'} ตัว` : 'ยังไม่มี') : builtCount ? `สร้างแล้ว ${builtCount} หลัง` : 'ยังไม่มี'}</span>
@@ -558,7 +559,7 @@ export function WikiBuilding({ id }: { id: string }) {
       </Card>
         {kind && <Card>
           <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-            <Slot size={40} r={10} />
+            <Slot size={40} r={10} file={ranked[0]?.img ?? undefined} />
             <span style={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
               <span style={{ fontSize: 15, fontWeight: 700, lineHeight: 1.3 }}>แนะนำเลี้ยงใน {kind === 'coop' ? 'Coop' : 'Barn'}</span>
               <span style={{ fontSize: 13, color: '#6B6157', lineHeight: 1.35 }}>{ranked.length ? ranked.slice(0, 3).map((a, i) => `${i + 1} ${a.name_en}`).join(' · ') : NA}</span>

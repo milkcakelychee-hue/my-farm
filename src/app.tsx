@@ -196,7 +196,9 @@ function parseHash(): { tab: number; sub?: Sub } {
   return m ? { tab: Math.min(4, +m[1]), sub: m[2] } : { tab: 0 }
 }
 
+import { useIconsReady } from './data/icons'
 export function App() {
+  useIconsReady()
   const [route, setRoute] = useState(parseHash)
   const [online, setOnline] = useState(navigator.onLine)
   const [boot, setBoot] = useState(0)

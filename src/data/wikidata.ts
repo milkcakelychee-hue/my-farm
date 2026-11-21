@@ -43,7 +43,7 @@ export async function usesOf(id: string): Promise<Use[]> {
   const [recipes, bundles, loves] = await Promise.all([
     query<Use>(`SELECT 'recipe' kind, o.id, o.name_en, o.name_th, ${IMG('o.image_id')} img, CASE r.kind WHEN 'cooking' THEN 'สูตรอาหาร' ELSE 'สูตรคราฟต์' END tag
       FROM recipe_ingredient ri JOIN recipe r ON r.id = ri.recipe_id JOIN item o ON o.id = r.output_item_id WHERE ri.item_id = ? LIMIT 12`, [id]),
-    query<Use>(`SELECT 'bundle' kind, b.id, b.name_en, NULL name_th, NULL img, b.room tag FROM bundle_item bi JOIN bundle b ON b.id = bi.bundle_id WHERE bi.item_id = ?`, [id]),
+    query<Use>(`SELECT 'bundle' kind, b.id, b.name_en, NULL name_th, (SELECT file_path FROM image WHERE id = 'img_npc_junimos' AND status = 'downloaded') img, b.room tag FROM bundle_item bi JOIN bundle b ON b.id = bi.bundle_id WHERE bi.item_id = ?`, [id]),
     query<Use>(`SELECT 'love' kind, n.id, n.name_en, n.name_th, ${IMG('n.image_id')} img, 'ชอบมาก' tag FROM gift_taste g JOIN npc n ON n.id = g.npc_id WHERE g.item_id = ? AND g.taste = 'love' ORDER BY n.name_en`, [id]),
   ])
   return [...recipes, ...bundles, ...loves]
