@@ -1,5 +1,6 @@
 // คอมโพเนนต์ระบบดีไซน์ — ค่าทุกตัวคัดจากบอร์ด 33 (DS_Components) และ 34 (DS_States)
 import type { ComponentChildren, JSX } from 'preact'
+import { useState } from 'preact/hooks'
 
 type S = JSX.CSSProperties
 
@@ -102,6 +103,24 @@ export function Tile({ label, selected, onClick, icon }: { label: string; select
   )
 }
 
+/* ---------- ช่องตัวเลขกลางตัวนับ: แตะแล้วพิมพ์จำนวนเองได้ ---------- */
+export function NumInput({ value, onChange, min = 0, max, width, font = 20 }: { value: number; onChange: (v: number) => void; min?: number; max?: number; width: number; font?: number }) {
+  const [text, setText] = useState<string | null>(null)        // null = ไม่ได้พิมพ์อยู่ แสดงค่าจริง
+  const clamp = (v: number) => Math.max(min, max == null ? v : Math.min(max, v))
+  const commit = () => {
+    if (text != null && text.trim() !== '' && !isNaN(+text)) onChange(clamp(Math.round(+text)))
+    setText(null)
+  }
+  return (
+    <input type="text" inputMode="numeric" pattern="[0-9]*" aria-label="จำนวน" value={text ?? String(value)}
+      onFocus={(e) => { setText(String(value)); (e.target as HTMLInputElement).select() }}
+      onInput={(e) => setText((e.target as HTMLInputElement).value.replace(/[^0-9]/g, ''))}
+      onBlur={commit} onKeyDown={(e) => { if (e.key === 'Enter') (e.target as HTMLInputElement).blur() }}
+      style={{ width, boxSizing: 'border-box', padding: '4px 0', border: 0, borderRadius: 10, outline: 'none', background: text != null ? '#FAF6EE' : 'transparent',
+        boxShadow: text != null ? 'inset 0 0 0 1.5px #FDB927' : 'none', textAlign: 'center', fontFamily: 'inherit', fontSize: font, fontWeight: 800, color: 'var(--ink)' }} />
+  )
+}
+
 /* ---------- ตัวนับ ---------- */
 const stepBtn: S = { width: 44, height: 44, border: 0, borderRadius: 12, background: 'var(--sunken)', display: 'flex', alignItems: 'center', justifyContent: 'center' }
 export function Stepper({ value, onChange, max, min = 0 }: { value: number; onChange: (v: number) => void; max?: number; min?: number }) {
@@ -115,7 +134,7 @@ export function Stepper({ value, onChange, max, min = 0 }: { value: number; onCh
       )}
       <span style={{ flex: 1 }} />
       <button aria-label="ลด" style={stepBtn} onClick={() => onChange(clamp(value - 1))}><Icon d={MINUS} /></button>
-      <span style={{ minWidth: 34, textAlign: 'center', fontSize: 20, fontWeight: 800 }}>{value}</span>
+      <NumInput value={value} onChange={onChange} min={min} max={max} width={44} />
       <button aria-label="เพิ่ม" style={stepBtn} onClick={() => onChange(clamp(value + 1))}><Icon d={PLUS} /></button>
     </div>
   )

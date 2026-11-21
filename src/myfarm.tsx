@@ -8,7 +8,7 @@ import {
   type FarmData,
 } from './data/farmdata'
 import type { HouseLevel, Plot, SaveData, Season, SprinklerKind } from './data/save'
-import { ConfirmDelete, EmptyState, Skeleton } from './ui'
+import { ConfirmDelete, EmptyState, NumInput, Skeleton } from './ui'
 
 type S = JSX.CSSProperties
 export const BRAND160 = 'linear-gradient(160deg,#FFD25E 0%,#FDB927 55%,#F7A441 100%)'
@@ -33,7 +33,16 @@ export const I = {
 
 /** ช่องไอคอน: ใช้รูปจากฐานข้อมูลถ้ามี ไม่มีก็เป็นกรอบเส้นประตามบอร์ด */
 export function Slot({ size, r, file, on }: { size: number; r: number; file?: string; on?: boolean }) {
-  if (file) return <img src={`${import.meta.env.BASE_URL}img/${file}`} alt="" width={size} height={size} style={{ flex: 'none', imageRendering: 'pixelated', objectFit: 'contain' }} />
+  // รูปจากเกมอยู่ในกรอบขนาดเท่าช่องเดิม และย่อรูปเหลือราว 70% ของกรอบ
+  if (file) {
+    const img = Math.round(size * 0.7)
+    return (
+      <span aria-hidden="true" style={{ flex: 'none', width: size, height: size, boxSizing: 'border-box', borderRadius: r, display: 'flex', alignItems: 'center', justifyContent: 'center',
+        background: on ? 'rgba(255,255,255,.35)' : '#F6F0E4', boxShadow: on ? 'inset 0 0 0 1.5px rgba(255,255,255,.7)' : 'inset 0 0 0 1.5px #E8D9B5' }}>
+        <img src={`${import.meta.env.BASE_URL}img/${file}`} alt="" width={img} height={img} style={{ imageRendering: 'pixelated', objectFit: 'contain' }} />
+      </span>
+    )
+  }
   return <span aria-hidden="true" style={{ flex: 'none', width: size, height: size, boxSizing: 'border-box', borderRadius: r, border: on ? '2px dashed rgba(255,255,255,.75)' : '2px dashed #CDBEA6', background: on ? 'rgba(255,255,255,.22)' : '#F6F0E4' }} />
 }
 
@@ -85,7 +94,7 @@ export function Count({ value, onChange, min = 0, max, big, font }: { value: num
   return (
     <div style={{ flex: 'none', display: 'flex', alignItems: 'center', gap: big ? 8 : 4 }}>
       <button aria-label="ลด" onClick={() => set(value - 1)} style={{ ...b, background: '#F4F1EB' }}>{I.minus(big ? 20 : 18)}</button>
-      <span style={{ minWidth: big ? 44 : 36, textAlign: 'center', fontSize: font ?? 20, fontWeight: 800 }}>{value}</span>
+      <NumInput value={value} onChange={onChange} min={min} max={max} width={big ? 52 : 44} font={font ?? 20} />
       <button aria-label="เพิ่ม" onClick={() => set(value + 1)} style={{ ...b, background: BRAND160 }}>{I.plus(big ? 20 : 18, '#26201A')}</button>
     </div>
   )
