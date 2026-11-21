@@ -107,6 +107,19 @@ function Hero({ img, en, th, chips, size = 96 }: { img?: string | null; en: stri
     </div>
   )
 }
+/** ป้ายแบบตาราง 3 คอลัมน์ (แทนป้ายเม็ดยา) */
+function TileGrid({ children, cols = 3 }: { children: ComponentChildren; cols?: number }) {
+  return <div style={{ display: 'grid', gridTemplateColumns: `repeat(${cols}, minmax(0, 1fr))`, gap: 8 }}>{children}</div>
+}
+function GridTile({ on, onClick, icon, label, value, valueColor }: { on: boolean; onClick: () => void; icon?: ComponentChildren; label: string; value?: string; valueColor?: string }) {
+  return (
+    <button aria-pressed={on} onClick={onClick} style={{ minWidth: 0, minHeight: 64, boxSizing: 'border-box', padding: '8px 8px', display: 'flex', flexDirection: 'column', alignItems: 'flex-start', justifyContent: 'center', gap: 2, border: 0, borderRadius: 14, color: '#26201A', textAlign: 'left',
+      ...(on ? { background: BRAND160, boxShadow: '0 3px 8px rgba(247,164,65,.3)' } : { background: '#FFFFFF', boxShadow: 'inset 0 0 0 1.5px #E8D9B5' }) }}>
+      <span style={{ display: 'flex', alignItems: 'flex-start', gap: 4, minWidth: 0, maxWidth: '100%' }}>{icon && <span style={{ flex: 'none', marginTop: 1 }}>{icon}</span>}<span style={{ fontSize: 13, fontWeight: 700, lineHeight: 1.25, overflowWrap: 'anywhere' }}>{label}</span></span>
+      {value && <span style={{ fontSize: 12, fontWeight: 600, lineHeight: 1.3, color: on ? '#26201A' : (valueColor ?? '#6B6157') }}>{value}</span>}
+    </button>
+  )
+}
 /** ราคาตามคุณภาพ (ตัวคูณจาก game_constant) */
 function QualityPrices({ price, c }: { price: number | null; c: Record<string, number> }) {
   const q: [string, number | null][] = [['Normal', 1000], ['Silver', c.quality_price_silver_x1000 ?? null], ['Gold', c.quality_price_gold_x1000 ?? null], ['Iridium', c.quality_price_iridium_x1000 ?? null]]
@@ -408,12 +421,12 @@ export function WikiFish() {
       <TitleRow title="ปลา" />
       <SearchBox value={q} onInput={setQ} />
       <FishMap value={spot} onChange={setSpot} counts={counts} />
-      <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
-        {chipsShown.map((x) => {
-          const on = spot === x.key
-          return <button onClick={() => setSpot(on ? null : x.key)} style={{ height: 32, padding: '0 10px 0 8px', display: 'inline-flex', alignItems: 'center', gap: 4, border: 0, borderRadius: 8, fontSize: 12.5, fontWeight: 600, color: '#26201A', ...(on ? { background: BRAND160 } : { background: '#E6E0FB' }) }}>{PIN(on ? '#26201A' : '#4B3F8F')}{x.th} {counts[x.key]}</button>
-        })}
-      </div>
+      <TileGrid>
+        {chipsShown.map((x) => (
+          <GridTile on={spot === x.key} onClick={() => setSpot(spot === x.key ? null : x.key)} icon={PIN(spot === x.key ? '#26201A' : '#4B3F8F', 16)}
+            label={x.th} value={`${counts[x.key]} ชนิด`} />
+        ))}
+      </TileGrid>
       <SeasonTabs value={cur} onChange={setSeason} now={now} compact />
       <Head title={`${cur}${spotTh ? ` · ${spotTh}` : ''} · ${list?.length ?? 0} ชนิด`} />
       {!list ? <Loading /> : list.length === 0 ? <EmptyState title="ไม่มีปลาในเงื่อนไขนี้" /> : (
@@ -618,7 +631,7 @@ export function WikiNpc({ id }: { id: string }) {
   const [day, setDay] = useState<'normal' | 'rain' | 'other'>('normal')
   useEffect(() => { if (data?.n) pushRecent({ href: `#/1/npc/${id}`, name_en: data.n.name_en, name_th: data.n.name_th, img: file(data.n.img), sub: `NPC${data.n.birthday_season ? ` · วันเกิด ${data.n.birthday_season} ${data.n.birthday_day}` : ''}` }) }, [data])
   if (!data || !s) return <Loading />
-  const { n: npc, gifts, sched } = data
+  const { n: npc, gifts, sched, pts } = data
   let until: number | null = null
   if (npc.birthday_season && npc.birthday_day) {
     const t = dayIndex(s.date)
@@ -666,8 +679,8 @@ export function WikiNpc({ id }: { id: string }) {
                     {i < shown.length - 1 && <span aria-hidden="true" style={{ position: 'absolute', left: 5, top: 21, bottom: -14, width: 2, background: '#E8D9B5' }} />}
                   </span>
                   <span style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', gap: 4 }}>
-                    <span style={{ fontSize: 15, fontWeight: 700, lineHeight: 1.4 }}>{r.location}</span>
-                    {r.note && <span style={{ fontSize: 13, color: '#6B6157', lineHeight: 1.35 }}>{r.note}</span>}
+                    <span style={{ fontSize: 15, fontWeight: 700, lineHeight: 1.4 }}>{r.location_th ?? r.location}</span>
+                    {(r.note_th ?? r.note) && <span style={{ fontSize: 13, color: '#6B6157', lineHeight: 1.35 }}>{r.note_th ?? r.note}</span>}
                   </span>
                 </div>
               ))}
@@ -677,7 +690,15 @@ export function WikiNpc({ id }: { id: string }) {
       </Card>
       <Head title="ของขวัญ" note="แตะของเพื่อดูรายละเอียด" />
       <Card gap={12}>
-        <Seg items={TASTES.filter(([k]) => k !== 'hate')} value={taste} onPick={setTaste} />
+        <TileGrid>
+          {TASTES.map(([k, l]) => {
+            const p = pts[`gift_points_${k}`], per = pts.friendship_points_per_heart
+            const h = p == null || !per ? null : p / per
+            const hs = h == null ? NA : `${h > 0 ? '+' : h < 0 ? '−' : ''}${Math.abs(h).toFixed(2).replace(/\.?0+$/, '')} ♥`
+            return <GridTile on={taste === k} onClick={() => setTaste(k)} label={`${l} · ${gifts.filter((g) => g.taste === k).length}`} value={hs} valueColor={h != null && h < 0 ? '#A63D2A' : '#3F5510'} />
+          })}
+        </TileGrid>
+        {pts.friendship_points_per_heart && <span style={{ fontSize: 12.5, color: '#6B6157', lineHeight: 1.5 }}>หัวใจ 1 ดวง = {pts.friendship_points_per_heart} แต้ม · ชอบมาก +{pts.gift_points_love} แต้ม{pts.gift_birthday_mult ? ` · ให้ในวันเกิดได้ ×${pts.gift_birthday_mult}` : ''}</span>}
         {list.length === 0 ? <span style={{ fontSize: 13, color: '#6B6157' }}>{NA}</span> : list.map((g) => <ItemLine img={file(g.img)} en={g.name_en} th={g.name_th} onClick={() => goWiki('item/' + g.id)} right={I.chev()} />)}
       </Card>
     </Body>

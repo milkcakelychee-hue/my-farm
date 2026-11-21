@@ -84,9 +84,12 @@ export async function npcFull(id: string) {
   if (!n) return null
   const gifts = await query<{ id: string; name_en: string; name_th: string | null; img: string | null; taste: string }>(`SELECT i.id, i.name_en, i.name_th, ${IMG('i.image_id')} img, g.taste
     FROM gift_taste g JOIN item i ON i.id = g.item_id WHERE g.npc_id = ? ORDER BY i.name_en`, [id])
-  const sched = (await hasTable('npc_schedule')) ? await query<{ season: string | null; day_kind: string; time: number; location: string; note: string | null }>(
-    'SELECT season, day_kind, time, location, note FROM npc_schedule WHERE npc_id = ? ORDER BY time', [id]) : null
-  return { n, gifts, sched }
+  const sc = (await hasTable('npc_schedule')) ? await cols('npc_schedule') : null
+  const th = sc?.has('location_th') ? ', location_th, note_th' : ", NULL location_th, NULL note_th"
+  const sched = sc ? await query<{ season: string | null; day_kind: string; time: number; location: string; note: string | null; location_th: string | null; note_th: string | null }>(
+    `SELECT season, day_kind, time, location, note${th} FROM npc_schedule WHERE npc_id = ? ORDER BY time`, [id]) : null
+  const pts = Object.fromEntries((await query<{ key: string; value: number }>(`SELECT key, value FROM game_constant WHERE key LIKE 'gift_%' OR key = 'friendship_points_per_heart'`)).map((r) => [r.key, r.value]))
+  return { n, gifts, sched, pts }
 }
 export const npcList = () => query<{ id: string; name_en: string; name_th: string | null; img: string | null; birthday_season: string | null; birthday_day: number | null }>(
   `SELECT id, name_en, name_th, ${IMG('image_id')} img, birthday_season, birthday_day FROM npc ORDER BY name_en`)
