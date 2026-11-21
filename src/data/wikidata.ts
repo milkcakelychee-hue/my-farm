@@ -93,3 +93,24 @@ export async function npcFull(id: string) {
 }
 export const npcList = () => query<{ id: string; name_en: string; name_th: string | null; img: string | null; birthday_season: string | null; birthday_day: number | null }>(
   `SELECT id, name_en, name_th, ${IMG('image_id')} img, birthday_season, birthday_day FROM npc ORDER BY name_en`)
+
+/* ---------- สถานที่ SVE (หน้า Locations ของวิกิ SVE) ---------- */
+export type Loc = { id: string; name_en: string; name_th: string | null; category: string; img: string | null; description_en: string | null; fish: string[] }
+export async function sveLocations(): Promise<Loc[]> {
+  if (!(await hasTable('location'))) return []
+  const [locs, aliases, fish] = await Promise.all([
+    query<Omit<Loc, 'fish'>>(`SELECT id, name_en, name_th, category, ${IMG('image_id')} img, description_en FROM location ORDER BY sort`),
+    query<{ alias: string; location_id: string }>('SELECT alias, location_id FROM location_alias'),
+    allFish(),
+  ])
+  const byName = new Map<string, string>()
+  locs.forEach((l) => byName.set(l.name_en.toLowerCase(), l.id))
+  aliases.forEach((a) => byName.set(a.alias.toLowerCase(), a.location_id))
+  const fishAt: Record<string, string[]> = {}
+  for (const f of fish) {
+    let ls: string[] = []
+    try { const j = JSON.parse(f.locations || '[]'); ls = Array.isArray(j) ? j : [] } catch { /* ข้อมูลเสีย */ }
+    for (const l of ls) { const id = byName.get(String(l).toLowerCase()); if (id) (fishAt[id] ??= []).includes(f.id) || fishAt[id].push(f.id) }
+  }
+  return locs.map((l) => ({ ...l, fish: fishAt[l.id] ?? [] }))
+}

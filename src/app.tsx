@@ -5,7 +5,7 @@ import {
   ItemRow, OfflineBanner, Page, PrimaryButton, SecondaryButton, SectionHead, Skeleton, Stepper, Tile, WarnBar,
 } from './ui'
 import { Stage1Data } from './stage1'
-import { WikiBuilding, WikiBuildings, WikiCrops, WikiFish, WikiHome, WikiItem, WikiNpc, WikiNpcs } from './wiki'
+import { WikiLocationFish, WikiSveLocations, WikiBuilding, WikiBuildings, WikiCrops, WikiFish, WikiHome, WikiItem, WikiNpc, WikiNpcs } from './wiki'
 import { AdvisorFresh, AdvisorProcess, AnimalAdvisor, Calculate, SeedPlan, Skills } from './calculate'
 import { AnimalHousing, Buildings, EditPlot, FarmError, Greenhouse, MyFarm, MyFarmIsland } from './myfarm'
 import { Component, type ComponentChildren } from 'preact'
@@ -221,7 +221,7 @@ export function App() {
   }
   else if (route.tab === 1) {
     const [k, id] = [sub.split('/')[0], sub.split('/').slice(1).join('/')]
-    body = <Catch key={sub}>{k === 'crops' ? <WikiCrops /> : k === 'fish' ? <WikiFish /> : k === 'buildings' ? <WikiBuildings /> : k === 'npcs' ? <WikiNpcs />
+    body = <Catch key={sub}>{k === 'crops' ? <WikiCrops /> : sub === 'fish/sve' ? <WikiSveLocations /> : sub.startsWith('fish/loc/') ? <WikiLocationFish id={sub.slice(9)} /> : k === 'fish' ? <WikiFish /> : k === 'buildings' ? <WikiBuildings /> : k === 'npcs' ? <WikiNpcs />
       : k === 'item' ? <WikiItem id={id} /> : k === 'building' ? <WikiBuilding id={id} /> : k === 'npc' ? <WikiNpc id={id} /> : <WikiHome />}</Catch>
   }
   else if (route.tab === 3) {

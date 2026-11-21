@@ -7,7 +7,7 @@
     "dev": "vite",
     "build": "tsc -b && vite build",
     "preview": "vite preview",
-    "sync-db": "cp ../stardew-db/stardew.sqlite public/data/stardew.sqlite && cp node_modules/sql.js/dist/sql-wasm.wasm public/data/sql-wasm.wasm && rm -rf public/img && mkdir -p public/img && cp ../stardew-db/images/items/*.png public/img/"
+    "sync-db": "cp ../stardew-db/stardew.sqlite public/data/stardew.sqlite && cp node_modules/sql.js/dist/sql-wasm.wasm public/data/sql-wasm.wasm && rm -rf public/img && mkdir -p public/img && cp ../stardew-db/images/items/*.png public/img/ && python3 scripts/shrink-images.py public/img"
   },
   "dependencies": {
     "@fontsource/ibm-plex-sans-thai-looped": "^5.2.5",

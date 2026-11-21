@@ -5,7 +5,7 @@ import { useSave } from './data/useSave'
 import { applyFormula, capacity, dayIndex, SEASONS, useFarmData } from './data/farmdata'
 import { useCalcData, freshPlan, bestValue, groupOf, bonus } from './data/calc'
 import {
-  allFish, buildingFull, buildingList, cropFull, cropsInSeason, file, itemFull, npcFull, npcList, productsOf, search, usesOf,
+  allFish, sveLocations, buildingFull, buildingList, cropFull, cropsInSeason, file, itemFull, npcFull, npcList, productsOf, search, usesOf,
   type FishRow, type Row,
 } from './data/wikidata'
 import type { Season } from './data/save'
@@ -403,6 +403,69 @@ function FishMap({ value, onChange, counts }: { value: string | null; onChange: 
     </div>
   )
 }
+/** หน้าสถานที่ SVE แบ่งตามหมวดของวิกิ SVE พร้อมรูป · แตะเพื่อดูปลาที่ตกได้ */
+const CAT_TH: Record<string, string> = { 'Pelican Town': 'Pelican Town', 'West of Pelican Town': 'ทางตะวันตกของเมือง', 'East of Pelican Town': 'ทางตะวันออกของเมือง', Backwoods: 'Backwoods',
+  'The Mountain': 'ภูเขา', 'The Railroad': 'ทางรถไฟ', 'Cindersap Forest': 'Cindersap Forest', 'Secret Woods': 'Secret Woods', 'Forest West': 'Forest West',
+  'Grampleton Suburbs': 'ชานเมือง Grampleton', 'Galdoran Continent': 'ทวีป Galdoran', Highlands: 'Highlands', 'Fable Reef': 'Fable Reef' }
+export function WikiSveLocations() {
+  const locs = useQ(() => sveLocations(), [])
+  if (!locs) return <Loading />
+  const cats = [...new Set(locs.map((l) => l.category))]
+  return (
+    <Body>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+        <button aria-label="กลับ" onClick={() => goWiki('fish')} style={{ flex: 'none', width: 44, height: 44, padding: 0, border: 0, borderRadius: '50%', background: '#FFFFFF', boxShadow: '0 2px 10px rgba(90,60,20,.08)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>{I.back}</button>
+        <div style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column' }}>
+          <h1 style={{ margin: 0, fontSize: 26, fontWeight: 800, lineHeight: 1.25 }}>สถานที่ SVE</h1>
+          <span style={{ fontSize: 13, color: '#6B6157' }}>จากวิกิ Stardew Valley Expanded · แตะเพื่อดูปลา</span>
+        </div>
+      </div>
+      {cats.map((c) => (
+        <>
+          <Head title={CAT_TH[c] ?? c} note={`${locs.filter((l) => l.category === c).length} ที่`} />
+          {locs.filter((l) => l.category === c).map((l) => (
+            <button onClick={() => goWiki('fish/loc/' + l.id)} style={{ ...card, padding: 0, overflow: 'hidden', border: 0, textAlign: 'left', color: '#26201A', gap: 0 }}>
+              {l.img ? <img src={`${import.meta.env.BASE_URL}img/${file(l.img)}`} alt="" style={{ width: '100%', height: 150, objectFit: 'cover', imageRendering: 'pixelated', display: 'block' }} />
+                : <span style={{ height: 80, background: '#F6F0E4', display: 'block' }} />}
+              <span style={{ display: 'flex', alignItems: 'center', gap: 10, padding: 14 }}>
+                <span style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', gap: 2 }}>
+                  <span style={{ fontSize: 16, fontWeight: 800, lineHeight: 1.3 }}>{l.name_en}</span>
+                  {l.description_en && <span style={{ fontSize: 12.5, color: '#6B6157', lineHeight: 1.45 }}>{l.description_en}</span>}
+                  <span style={{ fontSize: 12.5, fontWeight: 700, color: l.fish.length ? '#3F5510' : '#6B6157' }}>{l.fish.length ? `ปลา ${l.fish.length} ชนิด` : 'ไม่มีปลา'}</span>
+                </span>
+                {I.chev()}
+              </span>
+            </button>
+          ))}
+        </>
+      ))}
+    </Body>
+  )
+}
+export function WikiLocationFish({ id }: { id: string }) {
+  const data = useQ(async () => { const [locs, fish] = await Promise.all([sveLocations(), allFish()]); const l = locs.find((x) => x.id === id) ?? null; return { l, fish: l ? fish.filter((f) => l.fish.includes(f.id)) : [] } }, [id])
+  if (!data) return <Loading />
+  const { l, fish } = data
+  if (!l) return <Body><EmptyState title="ไม่พบสถานที่" /></Body>
+  return (
+    <Body>
+      <Back />
+      {l.img && <img src={`${import.meta.env.BASE_URL}img/${file(l.img)}`} alt="" style={{ width: '100%', height: 200, objectFit: 'cover', borderRadius: 20, imageRendering: 'pixelated' }} />}
+      <div style={{ display: 'flex', flexDirection: 'column' }}>
+        <h1 style={{ margin: 0, fontSize: 28, fontWeight: 800, lineHeight: 1.2 }}>{l.name_en}</h1>
+        <span style={{ fontSize: 13, color: '#6B6157' }}>{CAT_TH[l.category] ?? l.category}</span>
+      </div>
+      {l.description_en && <Card><span style={{ fontSize: 13.5, lineHeight: 1.55, color: '#4F463D' }}>{l.description_en}</span></Card>}
+      <Head title={`ปลาที่ตกได้ · ${fish.length} ชนิด`} />
+      {fish.length === 0 ? <EmptyState title="ไม่มีปลาที่นี่" /> : (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+          {fish.map((f) => <ListRow img={file(f.img)} en={f.name_en} th={f.name_th} sub={[arr(f.seasons).join(', '), f.time_start == null ? null : `${hhmm(f.time_start)}–${hhmm(f.time_end)}`].filter(Boolean).join(' · ')} onClick={() => goWiki('item/' + f.id)} />)}
+        </div>
+      )}
+    </Body>
+  )
+}
+
 export function WikiFish() {
   const s = useSave()
   const now = s?.date.season ?? 'Spring'
@@ -416,7 +479,7 @@ export function WikiFish() {
   inSeason?.forEach((f) => fishSpots(f).forEach((k) => { counts[k] = (counts[k] ?? 0) + 1 }))
   const list = inSeason?.filter((f) => (!spot || fishSpots(f).includes(spot)) && (!q.trim() || `${f.name_en} ${f.name_th ?? ''}`.toLowerCase().includes(q.toLowerCase())))
   const spotTh = SPOTS.find((x) => x.key === spot)?.th ?? (spot === 'other' ? 'ที่อื่น' : null)
-  const chipsShown = [...SPOTS.filter((x) => counts[x.key]), ...(counts.other ? [{ key: 'other', th: 'ที่อื่น (SVE ฯลฯ)' }] : [])]
+  const chipsShown = [...SPOTS.filter((x) => counts[x.key]), ...(counts.other ? [{ key: 'other', th: 'สถานที่ SVE' }] : [])]
   return (
     <Body>
       <TitleRow title="ปลา" />
@@ -424,7 +487,7 @@ export function WikiFish() {
       <FishMap value={spot} onChange={setSpot} counts={counts} />
       <TileGrid>
         {chipsShown.map((x) => (
-          <GridTile on={spot === x.key} onClick={() => setSpot(spot === x.key ? null : x.key)} icon={PIN(spot === x.key ? '#26201A' : '#4B3F8F', 16)}
+          <GridTile on={spot === x.key} onClick={() => (x.key === 'other' ? goWiki('fish/sve') : setSpot(spot === x.key ? null : x.key))} icon={PIN(spot === x.key ? '#26201A' : '#4B3F8F', 16)}
             label={x.th} value={`${counts[x.key]} ชนิด`} />
         ))}
       </TileGrid>
